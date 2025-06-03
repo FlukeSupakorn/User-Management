@@ -52,14 +52,13 @@
         <!-- Page Header -->
         <div class="page-header">
           <h1 class="page-title">Documents</h1>
-        </div>
-
-        <!-- Search and Controls -->
+        </div>        <!-- Search and Controls -->
         <div class="search-controls">
           <div class="search-bar">
             <mat-form-field appearance="outline" class="search-field">
-              <mat-icon matPrefix>search</mat-icon>
-              <input matInput placeholder="Search documents">
+              <mat-label>Search</mat-label>
+              <input matInput placeholder="Search documents..." #searchInput>
+              <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
           </div>
           
@@ -73,7 +72,11 @@
               </mat-select>
             </mat-form-field>
             
-            <button mat-icon-button class="filter-btn">
+            <button mat-icon-button class="saved-search-btn" title="Saved searches">
+              <mat-icon>bookmark</mat-icon>
+            </button>
+            
+            <button mat-icon-button class="filter-btn" title="Filter options">
               <mat-icon>tune</mat-icon>
             </button>
           </div>

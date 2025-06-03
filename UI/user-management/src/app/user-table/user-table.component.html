@@ -1,34 +1,31 @@
-<div class="users-section">
-  <!-- Header Controls -->
-  <div class="table-header">
+<div class="users-section">  <!-- Header Controls -->  <div class="table-header">
     <div class="search-controls">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Search</mat-label>
-        <input matInput placeholder="Search users...">
+        <input matInput placeholder="Search users..." 
+               [(ngModel)]="searchTerm" 
+               (input)="applyFilter()">
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
     </div>
-    
-    <div class="action-controls">
-      <button mat-raised-button color="primary" class="add-user-btn">
+      <div class="action-controls">
+      <button mat-raised-button color="primary" class="add-user-btn" (click)="openAddUserModal()">
         <mat-icon>add</mat-icon>
         Add user
-      </button>
-      
-      <mat-form-field appearance="outline" class="sort-field">
+      </button>      <mat-form-field appearance="outline" class="sort-select">
         <mat-label>Sort by</mat-label>
-        <mat-select>
+        <mat-select [(value)]="currentSort" (selectionChange)="onSortChange($event.value)">
           <mat-option value="name">Name</mat-option>
-          <mat-option value="date">Date Created</mat-option>
+          <mat-option value="createDate">Date Created</mat-option>
           <mat-option value="role">Role</mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button class="saved-search-btn">
+      <button mat-icon-button class="saved-search-btn" title="Saved searches">
         <mat-icon>bookmark</mat-icon>
       </button>
 
-      <button mat-icon-button class="filter-btn">
+      <button mat-icon-button class="filter-btn" title="Filter options">
         <mat-icon>tune</mat-icon>
       </button>
     </div>
@@ -41,10 +38,14 @@
 
   <!-- Users Table -->
   <mat-card class="table-card">
-    <mat-table [dataSource]="dataSource" class="users-table">
-      <!-- Name Column -->
+    <mat-table [dataSource]="dataSource" class="users-table">      <!-- Name Column -->
       <ng-container matColumnDef="name">
-        <mat-header-cell *matHeaderCellDef class="header-cell">Name</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef class="header-cell">
+          <button mat-button (click)="sortData('name')" class="sort-header">
+            Name
+            <mat-icon>{{ getSortIcon('name') }}</mat-icon>
+          </button>
+        </mat-header-cell>
         <mat-cell *matCellDef="let user" class="name-cell">
           <div class="user-info">
             <div class="user-name">{{ user.name }}</div>
@@ -53,19 +54,37 @@
         </mat-cell>
       </ng-container>
 
-      <!-- Create Date Column -->
-      <ng-container matColumnDef="createDate">
-        <mat-header-cell *matHeaderCellDef class="header-cell">Create Date</mat-header-cell>
-        <mat-cell *matCellDef="let user" class="date-cell">{{ user.createDate }}</mat-cell>
-      </ng-container>
-
-      <!-- Role Column -->
-      <ng-container matColumnDef="role">
-        <mat-header-cell *matHeaderCellDef class="header-cell">Role</mat-header-cell>
-        <mat-cell *matCellDef="let user" class="role-cell">
+      <!-- Role Badge Column (no header title) -->
+      <ng-container matColumnDef="userRole">
+        <mat-header-cell *matHeaderCellDef class="header-cell"></mat-header-cell>
+        <mat-cell *matCellDef="let user" class="user-role-cell">
           <mat-chip class="role-chip" [ngClass]="getRoleClass(user.role)">
             {{ user.role }}
           </mat-chip>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Create Date Column -->
+      <ng-container matColumnDef="createDate">
+        <mat-header-cell *matHeaderCellDef class="header-cell">
+          <button mat-button (click)="sortData('createDate')" class="sort-header">
+            Create Date
+            <mat-icon>{{ getSortIcon('createDate') }}</mat-icon>
+          </button>
+        </mat-header-cell>
+        <mat-cell *matCellDef="let user" class="date-cell">{{ user.createDate }}</mat-cell>
+      </ng-container>
+
+      <!-- Role Column (shows "Lorem ipsum") -->
+      <ng-container matColumnDef="role">
+        <mat-header-cell *matHeaderCellDef class="header-cell">
+          <button mat-button (click)="sortData('role')" class="sort-header">
+            Role
+            <mat-icon>{{ getSortIcon('role') }}</mat-icon>
+          </button>
+        </mat-header-cell>
+        <mat-cell *matCellDef="let user" class="role-cell">
+          <span class="role-text">Lorem ipsum</span>
         </mat-cell>
       </ng-container>
 
@@ -73,16 +92,17 @@
       <ng-container matColumnDef="action">
         <mat-header-cell *matHeaderCellDef class="header-cell">Action</mat-header-cell>
         <mat-cell *matCellDef="let user" class="action-cell">
-          <div class="action-content">
-            <span class="action-text">{{ user.action }}</span>
-            <div class="action-buttons">
-              <button mat-icon-button class="action-btn edit-btn">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button class="action-btn delete-btn">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
+          <div class="action-buttons">
+            <button mat-icon-button class="action-btn edit-btn" 
+                    title="Edit user" 
+                    (click)="editUser(user)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button class="action-btn delete-btn" 
+                    title="Delete user" 
+                    (click)="deleteUser(user)">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
         </mat-cell>
       </ng-container>
@@ -90,28 +110,69 @@
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
-  </mat-card>
-
-  <!-- Pagination -->
+  </mat-card>  <!-- Pagination -->
   <div class="pagination">
     <div class="pagination-info">
       <span>Rows per page: </span>
       <mat-form-field appearance="outline" class="per-page-select">
-        <mat-select value="5">
+        <mat-select [value]="itemsPerPage" (selectionChange)="changeItemsPerPage($event.value)">
           <mat-option value="5">5</mat-option>
           <mat-option value="10">10</mat-option>
           <mat-option value="25">25</mat-option>
         </mat-select>
-      </mat-form-field>
-      <span class="page-info">1-5 of 15</span>
+      </mat-form-field>      <span class="page-info">
+        {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ getEndIndex() }} of {{ totalItems }}
+      </span>
     </div>
     <div class="pagination-controls">
-      <button mat-icon-button>
+      <button mat-icon-button title="First page" 
+              [disabled]="currentPage === 1" 
+              (click)="goToPage(1)">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button mat-icon-button title="Previous page" 
+              [disabled]="currentPage === 1" 
+              (click)="previousPage()">
         <mat-icon>chevron_left</mat-icon>
       </button>
-      <button mat-icon-button>
+      
+      <ng-container *ngFor="let page of getPageNumbers()">
+        <button mat-button 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)"
+                class="page-number">
+          {{ page }}
+        </button>
+      </ng-container>
+      
+      <button mat-icon-button title="Next page" 
+              [disabled]="currentPage === totalPages" 
+              (click)="nextPage()">
         <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button mat-icon-button title="Last page" 
+              [disabled]="currentPage === totalPages" 
+              (click)="goToPage(totalPages)">
+        <mat-icon>last_page</mat-icon>
       </button>
     </div>
   </div>
 </div>
+
+<!-- Add User Modal -->
+<app-add-user-modal 
+  *ngIf="showAddUserModal" 
+  [isEditMode]="false"
+  (closeModalEvent)="closeAddUserModal()"
+  (saveUserEvent)="onSaveUser($event)">
+</app-add-user-modal>
+
+<!-- Edit User Modal -->
+<app-add-user-modal 
+  *ngIf="showEditUserModal" 
+  [isEditMode]="true"
+  [editUserData]="editingUser"
+  (closeModalEvent)="closeEditUserModal()"
+  (saveUserEvent)="onSaveUser($event)"
+  (deleteUserEvent)="onDeleteUser()">
+</app-add-user-modal>

@@ -1,14 +1,15 @@
 .sidebar {
   height: 100%;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid #E0E0E0;
 }
 
 .logo-section {
-  padding: 20px 16px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 24px 20px;
+  border-bottom: 1px solid #E0E0E0;
+  background-color: #FAFAFA;
 }
 
 .logo {
@@ -18,15 +19,15 @@
 }
 
 .logo-text {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: #333;
+  color: #1976D2;
   letter-spacing: 1px;
 }
 
 .nav-menu {
   flex: 1;
-  padding-top: 16px;
+  padding-top: 20px;
 }
 
 .nav-list {
@@ -36,23 +37,26 @@
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 12px 24px;
+  padding: 14px 24px;
   margin: 4px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 48px;
-  color: #6c757d;
+  transition: all 0.3s ease;
+  min-height: 52px;
+  color: #757575;
+  font-weight: 500;
 }
 
 .nav-item:hover {
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: #F5F5F5;
+  color: #1976D2;
+  transform: translateX(4px);
 }
 
 .nav-item.active {
-  background-color: #007bff;
+  background-color: #1976D2;
   color: white;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
 }
 
 .nav-item.active .nav-icon {
@@ -61,14 +65,14 @@
 
 .nav-icon {
   color: inherit;
-  margin-right: 12px;
+  margin-right: 16px;
   min-width: 24px;
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .nav-label {
   color: inherit;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
 }
 
