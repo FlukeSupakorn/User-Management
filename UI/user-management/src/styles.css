@@ -89,7 +89,7 @@ body {
   }
 }
 
-/* CDK Overlay and Menu Global Styles */
+
 .cdk-overlay-container {
   position: fixed;
   z-index: 1000;
@@ -120,7 +120,7 @@ body {
   z-index: 1000;
 }
 
-/* Material Menu Styles */
+
 .mat-mdc-menu-panel {
   border-radius: 8px !important;
   border: 1px solid #E0E0E0 !important;

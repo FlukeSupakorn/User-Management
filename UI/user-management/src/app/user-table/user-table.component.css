@@ -653,7 +653,7 @@
   background: #f0f4f8 !important;
 }
 
-/* Custom sort select to match Add User button and other dropdowns */
+
 .custom-sort-select {
   width: 140px;
   height: 48px;
@@ -693,12 +693,12 @@
 .custom-sort-select .mat-mdc-select-value {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* centers text and arrow on their sides */
+  justify-content: space-between; 
   height: 48px;
   font-size: 16px;
   color: #333;
   width: 100%;
-  padding-right: 8px; /* optional spacing before arrow */
+  padding-right: 8px; 
 }
 
 .custom-sort-select .mat-mdc-select-arrow {
@@ -706,7 +706,7 @@
   align-items: center;
   justify-content: center;
   height: 48px;
-  margin-left: 8px; /* optional spacing from text */
+  margin-left: 8px; 
 }
 
 .custom-sort-select .mat-mdc-select {

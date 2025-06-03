@@ -19,7 +19,7 @@
   flex-direction: column;
 }
 
-/* Toolbar Styling */
+
 .toolbar {
   background: #FFFFFF;
   border-bottom: 1px solid #E5E7EB;
@@ -90,7 +90,7 @@
   color: #6B7280;
 }
 
-/* Page Content */
+
 .page-content {
   flex: 1;
   padding: 24px;
@@ -108,7 +108,7 @@
   margin: 0;
 }
 
-/* Search and Controls */
+
 .search-controls {
   display: flex;
   justify-content: space-between;
@@ -170,7 +170,7 @@
   color: #374151;
 }
 
-/* Document Actions */
+
 .document-actions {
   display: flex;
   gap: 8px;
@@ -198,7 +198,7 @@
   border-color: #3B82F6;
 }
 
-/* Filter Controls */
+
 .filter-controls {
   display: flex;
   align-items: center;
@@ -230,7 +230,7 @@
   background: #2563EB;
 }
 
-/* List Header */
+
 .list-header {
   margin-bottom: 20px;
 }
@@ -247,7 +247,7 @@
   color: #6B7280;
 }
 
-/* Documents List */
+
 .documents-list {
   background: #FFFFFF;
   border-radius: 12px;
@@ -340,7 +340,7 @@
   color: #EF4444;
 }
 
-/* Material Design Overrides */
+
 ::ng-deep .mat-mdc-form-field-subscript-wrapper {
   display: none;
 }
@@ -374,7 +374,7 @@
   color: #6B7280;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   .search-controls {
     flex-direction: column;

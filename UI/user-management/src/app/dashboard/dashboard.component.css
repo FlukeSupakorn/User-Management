@@ -134,7 +134,7 @@
   line-height: 1.2;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .toolbar-left .greeting,
   .toolbar-left .sub-greeting {

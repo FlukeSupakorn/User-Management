@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,13 @@ import { FormsModule } from '@angular/forms';
 import { AddUserModalComponent} from '../add-user-modal/add-user-modal.component';
 import { UserService, UserFormData } from '../services/user.service';
 
+export interface UserPermission {
+  permissionId: string;
+  isReadable: boolean;
+  isWritable: boolean;
+  isDeletable: boolean;
+}
+
 export interface UserData {
   userId?: number;
   name: string;
@@ -27,6 +34,7 @@ export interface UserData {
   roleId?: number;
   username?: string;
   password?: string;
+  permission?: UserPermission[];
 }
 
 @Component({
@@ -66,14 +74,16 @@ export class UserTableComponent implements OnInit {
   filteredUsers: UserData[] = [];
   dataSource: UserData[] = [];
 
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.fetchUsersFromApi();
-  }
-  fetchUsersFromApi() {
+  }  fetchUsersFromApi() {
+    console.log('Fetching users from API...');
     this.userService.getUsers().subscribe({
       next: (response) => {
+        console.log('API response:', response);
+        const previousUserCount = this.allUsers.length;
         this.allUsers = (response.data || []).map((u: any) => ({
           userId: u.userId,
           name: `${u.firstName} ${u.lastName}`,
@@ -81,7 +91,7 @@ export class UserTableComponent implements OnInit {
           createDate: u.createdDate ? new Date(u.createdDate).toLocaleDateString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric'
           }) : '',
-          role: u.role || 'Employee',
+          role: u.role || this.getRoleName(u.roleId) || 'Employee',
           action: 'Lorem ipsum',
           firstName: u.firstName,
           lastName: u.lastName,
@@ -89,9 +99,20 @@ export class UserTableComponent implements OnInit {
           roleId: u.roleId,
           username: u.username
         }));
+        console.log('Mapped users:', this.allUsers);
+        console.log(`User count changed from ${previousUserCount} to ${this.allUsers.length}`);
+        
+        // Find the updated user and log it
+        const updatedUser = this.allUsers.find(u => u.userId === parseInt(this.editingUser?.userId || '0'));
+        if (updatedUser) {
+          console.log('Updated user in fetched data:', updatedUser);
+        }
+        
         this.applyFilter();
+        console.log('Filter applied, dataSource length:', this.dataSource.length);
       },
       error: (err) => {
+        console.error('Error fetching users:', err);
         this.allUsers = [];
         this.applyFilter();
       }
@@ -104,8 +125,10 @@ export class UserTableComponent implements OnInit {
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
     this.updateDisplayedData();
   }
-
   applyFilter() {
+    console.log('applyFilter called, searchTerm:', this.searchTerm);
+    console.log('allUsers length:', this.allUsers.length);
+    
     if (!this.searchTerm.trim()) {
       this.filteredUsers = [...this.allUsers];
     } else {
@@ -116,10 +139,15 @@ export class UserTableComponent implements OnInit {
         user.role.toLowerCase().includes(searchLower)
       );
     }
+    
+    console.log('filteredUsers length:', this.filteredUsers.length);
+    
     this.totalItems = this.filteredUsers.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
     this.currentPage = 1;
     this.updateDisplayedData();
+    
+    console.log('After updateDisplayedData, dataSource length:', this.dataSource.length);
   }
 
   sortData(column: string) {
@@ -260,46 +288,80 @@ export class UserTableComponent implements OnInit {
       5: 'HR Admin'
     };
     return roleMap[roleId] || 'Employee';
-  }
-  onSaveUser(userData: any) {
+  }  onSaveUser(userData: any) {
+    console.log('onSaveUser called with userData:', userData);
+    console.log('showEditUserModal:', this.showEditUserModal);
+    console.log('editingUser:', this.editingUser);
+    
     if (this.showEditUserModal && this.editingUser) {
-      const userIndex = this.allUsers.findIndex(u => u.email === this.editingUser!.email);
-      if (userIndex !== -1) {
-        this.allUsers[userIndex] = {
-          ...this.allUsers[userIndex],
-          name: `${userData.firstName} ${userData.lastName}`,
-          email: userData.email,
-          role: userData.role || this.getRoleName(userData.roleId),
-          phone: userData.phone,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          roleId: userData.roleId,
-          username: userData.username
-        };
-        this.applyFilter();
-      }
-      this.closeEditUserModal();
-    } else {
-      const newUser: UserData = {
-        name: `${userData.firstName} ${userData.lastName}`,
-        email: userData.email,
-        createDate: new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        role: userData.role || this.getRoleName(userData.roleId),
-        action: 'Lorem ipsum',
+      // Edit mode - call API to update user
+      if (!this.editingUser.userId) {
+        console.error('User ID is missing for update');
+        return;
+      }      const updateData: UserFormData = {
+        userId: this.editingUser.userId,
         firstName: userData.firstName,
         lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        roleId: userData.roleId,
+        username: userData.username
+        // Remove password to avoid issues
+      };      // Only include password if it's provided
+      if (userData.password && userData.password.trim() !== '') {
+        updateData.password = userData.password;
+      }
+
+      console.log('Calling updateUser API with data:', updateData);
+      console.log('User ID for update:', parseInt(this.editingUser.userId));
+
+      this.userService.updateUser(parseInt(this.editingUser.userId), updateData).subscribe({
+        next: (response) => {
+          console.log('Update API response:', response);
+          if (response.success) {
+            console.log('User updated successfully');
+            // Refetch all users from API to ensure consistency with a small delay
+            setTimeout(() => {
+              this.fetchUsersFromApi();
+            }, 100);
+          } else {
+            console.error('Error updating user:', response.message);
+          }
+          this.closeEditUserModal();
+        },
+        error: (error) => {
+          console.error('Error updating user:', error);
+          // Still close the modal but show the error
+          this.closeEditUserModal();
+        }
+      });
+    } else {
+      // Add mode - call API to create user
+      const createData: UserFormData = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
         phone: userData.phone,
         roleId: userData.roleId,
         username: userData.username,
         password: userData.password
-      };
-      this.allUsers.push(newUser);
-      this.applyFilter();
-      this.closeAddUserModal();
+      };        this.userService.createUser(createData).subscribe({
+          next: (response) => {
+            if (response.success) {
+              console.log('User created successfully');
+              // Refetch all users from API to ensure consistency
+              this.fetchUsersFromApi();
+            } else {
+              console.error('Error creating user:', response.message);
+            }
+            this.closeAddUserModal();
+          },
+          error: (error) => {
+            console.error('Error creating user:', error);
+            // Still close the modal but show the error
+            this.closeAddUserModal();
+          }
+        });
     }
   }
 
@@ -319,20 +381,14 @@ export class UserTableComponent implements OnInit {
     if (!user.userId) {
       console.error('User ID is missing');
       return;
-    }
-
-    this.userService.deleteUser(user.userId).subscribe({
+    }    this.userService.deleteUser(user.userId).subscribe({
       next: (response) => {
-        
-        const index = this.allUsers.findIndex(u => u.userId === user.userId);
-        if (index !== -1) {
-          this.allUsers.splice(index, 1);
-          this.applyFilter(); 
-        }
+        console.log('User deleted successfully');
+        // Refetch all users from API to ensure consistency
+        this.fetchUsersFromApi();
       },
       error: (error) => {
         console.error('Error deleting user:', error);
-        
       }
     });
   }

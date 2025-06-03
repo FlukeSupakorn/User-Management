@@ -61,7 +61,7 @@ export class AddUserModalComponent implements OnInit {
       this.populateForm();
     }
   }
-  // Custom validator for password confirmation
+  
   passwordMatchValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.parent) {
@@ -91,14 +91,14 @@ export class AddUserModalComponent implements OnInit {
       confirmPassword: ['', [Validators.required, this.passwordMatchValidator()]]
     });
   }  loadRoles() {
-    // Fallback roles for when API is not available
+    
     this.roles = [
       { roleId: 1, roleName: 'Super Admin', description: 'Full access to all modules' },
       { roleId: 2, roleName: 'Admin', description: 'Administrative access' },
       { roleId: 3, roleName: 'Employee', description: 'Limited access' }
     ];
 
-    // Try to load from API, but don't fail if it's not available
+    
     this.userService.getRoles().subscribe({
       next: (response: ApiResponse<Role[]>) => {
         if (response.success) {
@@ -109,7 +109,7 @@ export class AddUserModalComponent implements OnInit {
         console.log('API not available, using fallback roles');
       }
     });
-  }populateForm() {
+  }  populateForm() {
     if (this.editUserData) {
       this.userForm.patchValue({
         userId: this.editUserData.userId || '',
@@ -119,9 +119,22 @@ export class AddUserModalComponent implements OnInit {
         phone: this.editUserData.phone || '',
         roleId: this.editUserData.roleId || '',
         username: this.editUserData.username || '',
-        password: '', // Always leave password empty for security
+        password: '', 
         confirmPassword: ''
       });
+
+      
+      if ((this.editUserData as any).permission) {
+        const userPermissions = (this.editUserData as any).permission;
+        userPermissions.forEach((perm: any) => {
+          const modulePermission = this.modulePermissions.find(mp => mp.moduleName === perm.permissionId);
+          if (modulePermission) {
+            modulePermission.read = perm.isReadable;
+            modulePermission.write = perm.isWritable;
+            modulePermission.delete = perm.isDeletable;
+          }
+        });
+      }
     }
   }
 
@@ -137,36 +150,47 @@ export class AddUserModalComponent implements OnInit {
   }  saveUser() {
     if (this.userForm.valid) {
       const formData = this.userForm.value;
-      const userData: UserFormData = {
+      const userData: UserFormData & { permission?: any[] } = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         username: formData.username,
         password: formData.password,
-        roleId: parseInt(formData.roleId) // Make sure roleId is included as a number
+        roleId: parseInt(formData.roleId),
+        permission: this.modulePermissions.map(perm => ({
+          permissionId: perm.moduleName,
+          isReadable: perm.read,
+          isWritable: perm.write,
+          isDeletable: perm.delete
+        }))
       };
 
       console.log('User data to save:', userData);
       console.log('Module permissions:', this.modulePermissions);
 
-      // Try to call API to save user
-      this.userService.createUser(userData).subscribe({
-        next: (response: ApiResponse<UserFormData>) => {
-          if (response.success) {
-            alert('User saved successfully!');
-            this.closeModal();
-          } else {
-            alert('Error saving user: ' + response.message);
+      if (this.isEditMode) {
+        
+        this.saveUserEvent.emit(userData);
+      } else {
+        
+        this.userService.createUser(userData).subscribe({
+          next: (response: ApiResponse<UserFormData>) => {
+            if (response.success) {
+              alert('User saved successfully!');
+              this.closeModal();
+            } else {
+              alert('Error saving user: ' + response.message);
+            }
+          },
+          error: (error: any) => {
+            console.error('Error saving user:', error);
+            alert('Error saving user. Please check the console for details.');
           }
-        },
-        error: (error: any) => {
-          console.error('Error saving user:', error);
-          alert('Error saving user. Please check the console for details.');
-        }
-      });
+        });
+      }
     } else {
-      // Show validation errors
+      
       Object.keys(this.userForm.controls).forEach(key => {
         const control = this.userForm.get(key);
         if (control && control.invalid) {
