@@ -1,0 +1,117 @@
+<div class="users-section">
+  <!-- Header Controls -->
+  <div class="table-header">
+    <div class="search-controls">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search</mat-label>
+        <input matInput placeholder="Search users...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+    
+    <div class="action-controls">
+      <button mat-raised-button color="primary" class="add-user-btn">
+        <mat-icon>add</mat-icon>
+        Add user
+      </button>
+      
+      <mat-form-field appearance="outline" class="sort-field">
+        <mat-label>Sort by</mat-label>
+        <mat-select>
+          <mat-option value="name">Name</mat-option>
+          <mat-option value="date">Date Created</mat-option>
+          <mat-option value="role">Role</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-icon-button class="saved-search-btn">
+        <mat-icon>bookmark</mat-icon>
+      </button>
+
+      <button mat-icon-button class="filter-btn">
+        <mat-icon>tune</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- List Users Label -->
+  <div class="list-header">
+    <h2>List Users</h2>
+  </div>
+
+  <!-- Users Table -->
+  <mat-card class="table-card">
+    <mat-table [dataSource]="dataSource" class="users-table">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef class="header-cell">Name</mat-header-cell>
+        <mat-cell *matCellDef="let user" class="name-cell">
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-email">{{ user.email }}</div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Create Date Column -->
+      <ng-container matColumnDef="createDate">
+        <mat-header-cell *matHeaderCellDef class="header-cell">Create Date</mat-header-cell>
+        <mat-cell *matCellDef="let user" class="date-cell">{{ user.createDate }}</mat-cell>
+      </ng-container>
+
+      <!-- Role Column -->
+      <ng-container matColumnDef="role">
+        <mat-header-cell *matHeaderCellDef class="header-cell">Role</mat-header-cell>
+        <mat-cell *matCellDef="let user" class="role-cell">
+          <mat-chip class="role-chip" [ngClass]="getRoleClass(user.role)">
+            {{ user.role }}
+          </mat-chip>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Action Column -->
+      <ng-container matColumnDef="action">
+        <mat-header-cell *matHeaderCellDef class="header-cell">Action</mat-header-cell>
+        <mat-cell *matCellDef="let user" class="action-cell">
+          <div class="action-content">
+            <span class="action-text">{{ user.action }}</span>
+            <div class="action-buttons">
+              <button mat-icon-button class="action-btn edit-btn">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="action-btn delete-btn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <div class="pagination-info">
+      <span>Rows per page: </span>
+      <mat-form-field appearance="outline" class="per-page-select">
+        <mat-select value="5">
+          <mat-option value="5">5</mat-option>
+          <mat-option value="10">10</mat-option>
+          <mat-option value="25">25</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <span class="page-info">1-5 of 15</span>
+    </div>
+    <div class="pagination-controls">
+      <button mat-icon-button>
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-icon-button>
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

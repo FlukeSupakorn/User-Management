@@ -1,0 +1,22 @@
+<div class="sidebar">
+  <!-- Logo Section -->
+  <div class="logo-section">
+    <div class="logo">
+      <span class="logo-text">YOURLOGO</span>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="nav-menu">
+    <div class="nav-list">
+      <div 
+        *ngFor="let item of menuItems" 
+        class="nav-item"
+        [class.active]="item.active"
+        (click)="setActiveItem(item)">
+        <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+        <span class="nav-label">{{ item.label }}</span>
+      </div>
+    </div>
+  </nav>
+</div>

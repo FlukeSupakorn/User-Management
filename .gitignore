@@ -1,0 +1,56 @@
+# Node
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Angular
+.angular/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+.vs/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Compiled output
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+
+# Coverage
+coverage/
+
+# Misc
+*.log
+*.tmp
+*.temp
+
+# Dotnet
+API/user-management/bin/
+API/user-management/obj/
+
+# Angular Universal
+server.ts
+main.server.ts
+
+# Others
+*.bak
+*.orig
