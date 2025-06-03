@@ -11,9 +11,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
-import { AddUserModalComponent, UserFormData } from '../add-user-modal/add-user-modal.component';
+import { AddUserModalComponent} from '../add-user-modal/add-user-modal.component';
+import { UserService, UserFormData } from '../services/user.service';
 
 export interface UserData {
+  userId?: number;
   name: string;
   email: string;
   createDate: string;
@@ -22,7 +24,7 @@ export interface UserData {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  roleId?: string;
+  roleId?: number;
   username?: string;
   password?: string;
 }
@@ -51,150 +53,49 @@ export class UserTableComponent implements OnInit {
   displayedColumns: string[] = ['name', 'userRole', 'createDate', 'role', 'action'];
   showAddUserModal = false;
   showEditUserModal = false;
-  editingUser: UserData | null = null;
-  
-  // Pagination properties
+  editingUser: UserFormData | null = null;
   currentPage = 1;
   itemsPerPage = 5;
   totalItems = 0;
   totalPages = 0;
-    // Search and sort properties
   searchTerm = '';
   sortBy = 'name';
   sortDirection: 'asc' | 'desc' = 'asc';
   currentSort = 'name';
-    // Data properties
-  allUsers: UserData[] = [
-    {
-      name: 'David Wagner',
-      email: 'activevideo@domine.com',
-      createDate: '24 Oct, 2015',
-      role: 'Super Admin',
-      action: 'Lorem ipsum',
-      firstName: 'David',
-      lastName: 'Wagner',
-      phone: '+1-555-0123',
-      roleId: 'super-admin',
-      username: 'dwagner',
-      password: 'password123'
-    },
-    {
-      name: 'Iva Hogan',
-      email: 'active.warren@email.net',
-      createDate: '24 Oct, 2015',
-      role: 'Admin',
-      action: 'Lorem ipsum',
-      firstName: 'Iva',
-      lastName: 'Hogan',
-      phone: '+1-555-0124',
-      roleId: 'admin',
-      username: 'ihogan',
-      password: 'password123'
-    },
-    {
-      name: 'Devin Harrison',
-      email: 'activevideo@domain.com',
-      createDate: '18 Dec, 2015',
-      role: 'HR Admin',
-      action: 'Lorem ipsum',
-      firstName: 'Devin',
-      lastName: 'Harrison',
-      phone: '+1-555-0125',
-      roleId: 'hr-admin',
-      username: 'dharrison',
-      password: 'password123'
-    },
-    {
-      name: 'Lena Page',
-      email: 'activevideo@domain.net',
-      createDate: '8 Oct, 2016',
-      role: 'Employee',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Evie Barton',
-      email: 'active.evie1977@email.com',
-      createDate: '15 Jun, 2017',
-      role: 'Super Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Victoria Perez',
-      email: 'vperez@email.com',
-      createDate: '14 Jan, 2019',
-      role: 'HR Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Cara Medina',
-      email: 'caramedina@email.com',
-      createDate: '21 July, 2020',
-      role: 'Employee',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      createDate: '12 Mar, 2021',
-      role: 'Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Michael Chen',
-      email: 'michael.chen@domain.com',
-      createDate: '8 Sep, 2021',
-      role: 'Employee',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Emma Davis',
-      email: 'emma.davis@email.net',
-      createDate: '15 Nov, 2021',
-      role: 'HR Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'James Wilson',
-      email: 'james.wilson@domain.org',
-      createDate: '3 Feb, 2022',
-      role: 'Super Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Lisa Anderson',
-      email: 'lisa.anderson@email.com',
-      createDate: '22 Jun, 2022',
-      role: 'Employee',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Robert Taylor',
-      email: 'robert.taylor@domain.net',
-      createDate: '17 Oct, 2022',
-      role: 'Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Jennifer Brown',
-      email: 'jennifer.brown@email.org',
-      createDate: '9 Jan, 2023',
-      role: 'HR Admin',
-      action: 'Lorem ipsum'
-    },
-    {
-      name: 'Daniel Martinez',
-      email: 'daniel.martinez@domain.com',
-      createDate: '26 Apr, 2023',
-      role: 'Employee',
-      action: 'Lorem ipsum'
-    }
-  ];
-  
+  allUsers: UserData[] = [];
   filteredUsers: UserData[] = [];
   dataSource: UserData[] = [];
 
+  constructor(private userService: UserService) {}
+
   ngOnInit() {
-    this.initializeData();
+    this.fetchUsersFromApi();
+  }
+  fetchUsersFromApi() {
+    this.userService.getUsers().subscribe({
+      next: (response) => {
+        this.allUsers = (response.data || []).map((u: any) => ({
+          userId: u.userId,
+          name: `${u.firstName} ${u.lastName}`,
+          email: u.email,
+          createDate: u.createdDate ? new Date(u.createdDate).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+          }) : '',
+          role: u.role || 'Employee',
+          action: 'Lorem ipsum',
+          firstName: u.firstName,
+          lastName: u.lastName,
+          phone: u.phone,
+          roleId: u.roleId,
+          username: u.username
+        }));
+        this.applyFilter();
+      },
+      error: (err) => {
+        this.allUsers = [];
+        this.applyFilter();
+      }
+    });
   }
 
   initializeData() {
@@ -204,7 +105,6 @@ export class UserTableComponent implements OnInit {
     this.updateDisplayedData();
   }
 
-  // Search functionality
   applyFilter() {
     if (!this.searchTerm.trim()) {
       this.filteredUsers = [...this.allUsers];
@@ -216,13 +116,12 @@ export class UserTableComponent implements OnInit {
         user.role.toLowerCase().includes(searchLower)
       );
     }
-    
     this.totalItems = this.filteredUsers.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.currentPage = 1; // Reset to first page
+    this.currentPage = 1;
     this.updateDisplayedData();
   }
-  // Sort functionality
+
   sortData(column: string) {
     if (this.sortBy === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -230,21 +129,17 @@ export class UserTableComponent implements OnInit {
       this.sortBy = column;
       this.sortDirection = 'asc';
     }
-    
     this.filteredUsers.sort((a: any, b: any) => {
       const aValue = a[column];
       const bValue = b[column];
-      
       let comparison = 0;
       if (aValue > bValue) {
         comparison = 1;
       } else if (aValue < bValue) {
         comparison = -1;
       }
-      
       return this.sortDirection === 'desc' ? comparison * -1 : comparison;
     });
-    
     this.updateDisplayedData();
   }
 
@@ -253,7 +148,6 @@ export class UserTableComponent implements OnInit {
     this.sortData(column);
   }
 
-  // Pagination functionality
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
@@ -278,7 +172,6 @@ export class UserTableComponent implements OnInit {
   changeItemsPerPage(newSize: number) {
     this.itemsPerPage = newSize;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.currentPage = 1; // Reset to first page
     this.updateDisplayedData();
   }
 
@@ -288,7 +181,6 @@ export class UserTableComponent implements OnInit {
     this.dataSource = this.filteredUsers.slice(startIndex, endIndex);
   }
 
-  // Utility methods
   getRoleClass(role: string): string {
     switch (role) {
       case 'Super Admin':
@@ -315,15 +207,12 @@ export class UserTableComponent implements OnInit {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
     return pages;
   }
 
@@ -336,19 +225,16 @@ export class UserTableComponent implements OnInit {
 
   closeAddUserModal() {
     this.showAddUserModal = false;
-  }
-
-  openEditUserModal(user: UserData) {
-    // Convert display data to form data
+  }  openEditUserModal(user: UserData) {
     const names = user.name.split(' ');
     this.editingUser = {
-      ...user,
+      userId: user.userId?.toString(), 
       firstName: names[0] || '',
       lastName: names.slice(1).join(' ') || '',
+      email: user.email,
       phone: user.phone || '',
       roleId: this.getRoleId(user.role),
       username: user.username || user.email.split('@')[0],
-      password: '' // Don't populate password for security
     };
     this.showEditUserModal = true;
   }
@@ -357,48 +243,43 @@ export class UserTableComponent implements OnInit {
     this.showEditUserModal = false;
     this.editingUser = null;
   }
-
-  getRoleId(roleName: string): string {
-    const roleMap: { [key: string]: string } = {
-      'Super Admin': 'super-admin',
-      'Admin': 'admin',
-      'HR Admin': 'hr-admin',
-      'Employee': 'employee'
+  getRoleId(roleName: string): number {
+    const roleMap: { [key: string]: number } = {
+      'Super Admin': 2,
+      'Admin': 3,
+      'Employee': 4,
+      'HR Admin': 5
     };
-    return roleMap[roleName] || 'employee';
+    return roleMap[roleName] || 4;
   }
-
-  getRoleName(roleId: string): string {
-    const roleMap: { [key: string]: string } = {
-      'super-admin': 'Super Admin',
-      'admin': 'Admin',
-      'hr-admin': 'HR Admin',
-      'employee': 'Employee'
+  getRoleName(roleId: number): string {
+    const roleMap: { [key: number]: string } = {
+      2: 'Super Admin',
+      3: 'Admin', 
+      4: 'Employee',
+      5: 'HR Admin'
     };
     return roleMap[roleId] || 'Employee';
   }
-
   onSaveUser(userData: any) {
     if (this.showEditUserModal && this.editingUser) {
-      // Update existing user
       const userIndex = this.allUsers.findIndex(u => u.email === this.editingUser!.email);
       if (userIndex !== -1) {
         this.allUsers[userIndex] = {
           ...this.allUsers[userIndex],
           name: `${userData.firstName} ${userData.lastName}`,
           email: userData.email,
-          role: this.getRoleName(userData.roleId),
+          role: userData.role || this.getRoleName(userData.roleId),
           phone: userData.phone,
           firstName: userData.firstName,
           lastName: userData.lastName,
           roleId: userData.roleId,
           username: userData.username
         };
-        this.applyFilter(); // Refresh the display
+        this.applyFilter();
       }
       this.closeEditUserModal();
     } else {
-      // Add new user
       const newUser: UserData = {
         name: `${userData.firstName} ${userData.lastName}`,
         email: userData.email,
@@ -407,7 +288,7 @@ export class UserTableComponent implements OnInit {
           month: 'short', 
           day: 'numeric' 
         }),
-        role: this.getRoleName(userData.roleId),
+        role: userData.role || this.getRoleName(userData.roleId),
         action: 'Lorem ipsum',
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -417,7 +298,7 @@ export class UserTableComponent implements OnInit {
         password: userData.password
       };
       this.allUsers.push(newUser);
-      this.applyFilter(); // Refresh the display
+      this.applyFilter();
       this.closeAddUserModal();
     }
   }
@@ -427,15 +308,32 @@ export class UserTableComponent implements OnInit {
       const index = this.allUsers.findIndex(u => u.email === this.editingUser!.email);
       if (index !== -1) {
         this.allUsers.splice(index, 1);
-        this.applyFilter(); // Refresh the display
+        this.applyFilter();
       }
       this.closeEditUserModal();
     }
   }
   editUser(user: UserData) {
     this.openEditUserModal(user);
-  }
-  deleteUser(user: UserData) {
-    this.openEditUserModal(user);
+  }  deleteUser(user: UserData) {
+    if (!user.userId) {
+      console.error('User ID is missing');
+      return;
+    }
+
+    this.userService.deleteUser(user.userId).subscribe({
+      next: (response) => {
+        
+        const index = this.allUsers.findIndex(u => u.userId === user.userId);
+        if (index !== -1) {
+          this.allUsers.splice(index, 1);
+          this.applyFilter(); 
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting user:', error);
+        
+      }
+    });
   }
 }

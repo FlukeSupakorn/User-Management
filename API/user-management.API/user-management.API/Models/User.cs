@@ -34,8 +34,8 @@ namespace user_management.API.Models
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
-        public bool IsActive { get; set; } = true;        // Navigation properties
-        public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public bool IsActive { get; set; } = true;        public int RoleId { get; set; }
+        public Role Role { get; set; } 
         public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
     }
 }

@@ -19,13 +19,13 @@ namespace user_management.API.Controllers
             _context = context;
         }
 
-        // GET: api/Users
+        
         [HttpGet]
         public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetUsers()
         {
             try
-            {
-                var users = await _context.Users
+            {                var users = await _context.Users
+                    .Include(u => u.Role) 
                     .Where(u => u.IsActive)
                     .Select(u => new UserDto
                     {
@@ -35,6 +35,8 @@ namespace user_management.API.Controllers
                         Email = u.Email,
                         Phone = u.Phone,
                         Username = u.Username,
+                        RoleId = u.RoleId,
+                        Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
                         IsActive = u.IsActive
@@ -49,13 +51,13 @@ namespace user_management.API.Controllers
             }
         }
 
-        // GET: api/Users/5
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(int id)
         {
             try
-            {
-                var user = await _context.Users
+            {                var user = await _context.Users
+                    .Include(u => u.Role) 
                     .Where(u => u.UserId == id && u.IsActive)
                     .Select(u => new UserDto
                     {
@@ -65,6 +67,8 @@ namespace user_management.API.Controllers
                         Email = u.Email,
                         Phone = u.Phone,
                         Username = u.Username,
+                        RoleId = u.RoleId,
+                        Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
                         IsActive = u.IsActive
@@ -84,23 +88,30 @@ namespace user_management.API.Controllers
             }
         }
 
-        // POST: api/Users
+        
         [HttpPost]
         public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto createUserDto)
         {
             try
-            {
-                // Validate required fields
+            {                
                 if (string.IsNullOrWhiteSpace(createUserDto.FirstName) ||
                     string.IsNullOrWhiteSpace(createUserDto.LastName) ||
                     string.IsNullOrWhiteSpace(createUserDto.Email) ||
                     string.IsNullOrWhiteSpace(createUserDto.Username) ||
-                    string.IsNullOrWhiteSpace(createUserDto.Password))
+                    string.IsNullOrWhiteSpace(createUserDto.Password) ||
+                    createUserDto.RoleId <= 0)
                 {
                     return BadRequest(ApiResponse<UserDto>.FailureResult("All required fields must be provided"));
                 }
 
-                // Check if username or email already exists
+                
+                var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == createUserDto.RoleId);
+                if (!roleExists)
+                {
+                    return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
+                }
+
+                
                 var existingUser = await _context.Users
                     .AnyAsync(u => u.Username == createUserDto.Username || u.Email == createUserDto.Email);
 
@@ -109,10 +120,8 @@ namespace user_management.API.Controllers
                     return Conflict(ApiResponse<UserDto>.FailureResult("Username or email already exists"));
                 }
 
-                // Hash the password
-                string hashedPassword = HashPassword(createUserDto.Password);
-
-                var user = new User
+                
+                string hashedPassword = HashPassword(createUserDto.Password);                var user = new User
                 {
                     FirstName = createUserDto.FirstName,
                     LastName = createUserDto.LastName,
@@ -120,27 +129,33 @@ namespace user_management.API.Controllers
                     Phone = createUserDto.Phone,
                     Username = createUserDto.Username,
                     PasswordHash = hashedPassword,
+                    RoleId = createUserDto.RoleId,
                     CreatedDate = DateTime.UtcNow,
                     IsActive = true
-                };
-
-                _context.Users.Add(user);
+                };                _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+
+                
+                var createdUser = await _context.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
                 var userDto = new UserDto
                 {
-                    UserId = user.UserId,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    Phone = user.Phone,
-                    Username = user.Username,
-                    CreatedDate = user.CreatedDate,
-                    UpdatedDate = user.UpdatedDate,
-                    IsActive = user.IsActive
+                    UserId = createdUser.UserId,
+                    FirstName = createdUser.FirstName,
+                    LastName = createdUser.LastName,
+                    Email = createdUser.Email,
+                    Phone = createdUser.Phone,
+                    Username = createdUser.Username,
+                    RoleId = createdUser.RoleId,
+                    Role = createdUser.Role != null ? createdUser.Role.RoleName : "Employee", 
+                    CreatedDate = createdUser.CreatedDate,
+                    UpdatedDate = createdUser.UpdatedDate,
+                    IsActive = createdUser.IsActive
                 };
 
-                return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, 
+                return CreatedAtAction(nameof(GetUser), new { id = user.UserId },
                     ApiResponse<UserDto>.SuccessResult(userDto, "User created successfully"));
             }
             catch (Exception ex)
@@ -149,7 +164,7 @@ namespace user_management.API.Controllers
             }
         }
 
-        // PUT: api/Users/5
+        
         [HttpPut("{id}")]
         public async Task<ActionResult<ApiResponse<UserDto>>> UpdateUser(int id, UpdateUserDto updateUserDto)
         {
@@ -159,9 +174,7 @@ namespace user_management.API.Controllers
                 if (user == null)
                 {
                     return NotFound(ApiResponse<UserDto>.FailureResult("User not found"));
-                }
-
-                // Check if username or email already exists for other users
+                }                
                 var existingUser = await _context.Users
                     .AnyAsync(u => u.UserId != id && (u.Username == updateUserDto.Username || u.Email == updateUserDto.Email));
 
@@ -170,27 +183,43 @@ namespace user_management.API.Controllers
                     return Conflict(ApiResponse<UserDto>.FailureResult("Username or email already exists"));
                 }
 
+                
+                if (updateUserDto.RoleId > 0)
+                {
+                    var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == updateUserDto.RoleId);
+                    if (!roleExists)
+                    {
+                        return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
+                    }
+                }
+
                 user.FirstName = updateUserDto.FirstName;
                 user.LastName = updateUserDto.LastName;
                 user.Email = updateUserDto.Email;
                 user.Phone = updateUserDto.Phone;
                 user.Username = updateUserDto.Username;
+                user.RoleId = updateUserDto.RoleId;
                 user.IsActive = updateUserDto.IsActive;
-                user.UpdatedDate = DateTime.UtcNow;
+                user.UpdatedDate = DateTime.UtcNow;                await _context.SaveChangesAsync();
 
-                await _context.SaveChangesAsync();
+                
+                var updatedUser = await _context.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
                 var userDto = new UserDto
                 {
-                    UserId = user.UserId,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    Phone = user.Phone,
-                    Username = user.Username,
-                    CreatedDate = user.CreatedDate,
-                    UpdatedDate = user.UpdatedDate,
-                    IsActive = user.IsActive
+                    UserId = updatedUser.UserId,
+                    FirstName = updatedUser.FirstName,
+                    LastName = updatedUser.LastName,
+                    Email = updatedUser.Email,
+                    Phone = updatedUser.Phone,
+                    Username = updatedUser.Username,
+                    RoleId = updatedUser.RoleId,
+                    Role = updatedUser.Role != null ? updatedUser.Role.RoleName : "Employee", 
+                    CreatedDate = updatedUser.CreatedDate,
+                    UpdatedDate = updatedUser.UpdatedDate,
+                    IsActive = updatedUser.IsActive
                 };
 
                 return Ok(ApiResponse<UserDto>.SuccessResult(userDto, "User updated successfully"));
@@ -201,7 +230,7 @@ namespace user_management.API.Controllers
             }
         }
 
-        // DELETE: api/Users/5
+        
         [HttpDelete("{id}")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteUser(int id)
         {
@@ -213,7 +242,7 @@ namespace user_management.API.Controllers
                     return NotFound(ApiResponse<object>.FailureResult("User not found"));
                 }
 
-                // Soft delete - set IsActive to false
+                
                 user.IsActive = false;
                 user.UpdatedDate = DateTime.UtcNow;
 

@@ -178,10 +178,8 @@ namespace user_management.API.Controllers
                 if (role == null)
                 {
                     return NotFound(ApiResponse<object>.FailureResult("Role not found"));
-                }
-
-                // Check if role is assigned to any users
-                var roleInUse = await _context.UserRoles.AnyAsync(ur => ur.RoleId == id);
+                }                // Check if role is assigned to any users
+                var roleInUse = await _context.Users.AnyAsync(u => u.RoleId == id);
                 if (roleInUse)
                 {
                     return BadRequest(ApiResponse<object>.FailureResult("Cannot delete role that is assigned to users"));
