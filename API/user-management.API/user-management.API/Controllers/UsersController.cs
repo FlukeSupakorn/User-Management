@@ -26,7 +26,6 @@ namespace user_management.API.Controllers
             try
             {                var users = await _context.Users
                     .Include(u => u.Role) 
-                    .Where(u => u.IsActive)
                     .Select(u => new UserDto
                     {
                         UserId = u.UserId,
@@ -39,7 +38,6 @@ namespace user_management.API.Controllers
                         Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
-                        IsActive = u.IsActive
                     })
                     .ToListAsync();
 
@@ -58,7 +56,7 @@ namespace user_management.API.Controllers
             try
             {                var user = await _context.Users
                     .Include(u => u.Role) 
-                    .Where(u => u.UserId == id && u.IsActive)
+                    .Where(u => u.UserId == id)
                     .Select(u => new UserDto
                     {
                         UserId = u.UserId,
@@ -71,7 +69,6 @@ namespace user_management.API.Controllers
                         Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
-                        IsActive = u.IsActive
                     })
                     .FirstOrDefaultAsync();
 
@@ -131,7 +128,6 @@ namespace user_management.API.Controllers
                     PasswordHash = hashedPassword,
                     RoleId = createUserDto.RoleId,
                     CreatedDate = DateTime.UtcNow,
-                    IsActive = true
                 };                _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
@@ -152,7 +148,6 @@ namespace user_management.API.Controllers
                     Role = createdUser.Role != null ? createdUser.Role.RoleName : "Employee", 
                     CreatedDate = createdUser.CreatedDate,
                     UpdatedDate = createdUser.UpdatedDate,
-                    IsActive = createdUser.IsActive
                 };
 
                 return CreatedAtAction(nameof(GetUser), new { id = user.UserId },
@@ -199,7 +194,6 @@ namespace user_management.API.Controllers
                 user.Phone = updateUserDto.Phone;
                 user.Username = updateUserDto.Username;
                 user.RoleId = updateUserDto.RoleId;
-                user.IsActive = updateUserDto.IsActive;
                 user.UpdatedDate = DateTime.UtcNow;                await _context.SaveChangesAsync();
 
                 
@@ -219,7 +213,6 @@ namespace user_management.API.Controllers
                     Role = updatedUser.Role != null ? updatedUser.Role.RoleName : "Employee", 
                     CreatedDate = updatedUser.CreatedDate,
                     UpdatedDate = updatedUser.UpdatedDate,
-                    IsActive = updatedUser.IsActive
                 };
 
                 return Ok(ApiResponse<UserDto>.SuccessResult(userDto, "User updated successfully"));
@@ -232,37 +225,29 @@ namespace user_management.API.Controllers
 
         
         [HttpDelete("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteUser(int id)
-        {
-            try
-            {
-                var user = await _context.Users.FindAsync(id);
-                if (user == null)
-                {
-                    return NotFound(ApiResponse<object>.FailureResult("User not found"));
-                }
+    public async Task<ActionResult<ApiResponse<object>>> DeleteUser(int id)
+    {
+        // 1) find the user
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+            return NotFound(ApiResponse<object>.FailureResult("User not found"));
 
-                
-                user.IsActive = false;
-                user.UpdatedDate = DateTime.UtcNow;
+        // 2) remove and save
+        _context.Users.Remove(user);
+        var rows = await _context.SaveChangesAsync();
 
-                await _context.SaveChangesAsync();
-
-                return Ok(ApiResponse<object>.SuccessResult(null, "User deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.FailureResult("An error occurred while deleting the user", new List<string> { ex.Message }));
-            }
-        }
+        // 3) confirm how many rows were affected (should be 1)
+        if (rows > 0)
+            return Ok(ApiResponse<object>.SuccessResult(null, "User deleted successfully"));
+        else
+            return StatusCode(500, ApiResponse<object>.FailureResult("Delete did not persist"));
+    }
 
         private static string HashPassword(string password)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
-            }
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
         }
     }
 }

@@ -12,7 +12,7 @@
       <!-- User Form Grid -->
       <form [formGroup]="userForm" class="user-form">
         <mat-form-field class="form-field" >
-          <input matInput formControlName="userId" placeholder="User ID *">
+          <input matInput formControlName="userId" placeholder="User ID *" readonly>
         </mat-form-field>
         <mat-form-field class="form-field" >
           <input matInput formControlName="firstName" placeholder="First Name *">
@@ -34,10 +34,10 @@
         <mat-form-field class="form-field" >
           <input matInput formControlName="username" placeholder="Username *">
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" *ngIf="!isEditMode">
           <input matInput type="password" formControlName="password" placeholder="Password *">
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" *ngIf="!isEditMode">
           <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm Password *">
         </mat-form-field>
       </form>
@@ -72,7 +72,7 @@
     <div class="modal-footer">
       <div class="footer-right">
         <button mat-button class="cancel-btn" (click)="closeModal()">Cancel</button>
-        <button mat-raised-button color="primary" class="add-btn" [disabled]="!userForm.valid" (click)="saveUser()">{{ isEditMode ? 'Update User' : 'Add User' }}</button>
+        <button mat-raised-button color="primary" class="add-btn" [disabled]="!isEditMode && !userForm.valid" (click)="saveUser()">{{ isEditMode ? 'Update User' : 'Add User' }}</button>
       </div>
     </div>
   </div>

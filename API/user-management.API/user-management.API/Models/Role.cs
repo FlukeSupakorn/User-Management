@@ -15,7 +15,6 @@ namespace user_management.API.Models
         [StringLength(255)]        public string? Description { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-        public bool IsActive { get; set; } = true;
 
         // Navigation properties - Users with this role
         public virtual ICollection<User> Users { get; set; } = new List<User>();

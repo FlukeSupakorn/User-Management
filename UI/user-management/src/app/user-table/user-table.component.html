@@ -102,53 +102,14 @@
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
-  </mat-card>  
-  <div class="pagination">
-    <div class="pagination-info">
-      <span>Rows per page: </span>
-      <mat-form-field class="per-page-select">
-        <mat-select [value]="itemsPerPage" (selectionChange)="changeItemsPerPage($event.value)">
-          <mat-option value="5">5</mat-option>
-          <mat-option value="10">10</mat-option>
-          <mat-option value="25">25</mat-option>
-        </mat-select>
-      </mat-form-field>      <span class="page-info">
-        {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ getEndIndex() }} of {{ totalItems }}
-      </span>
-    </div>
-    <div class="pagination-controls">
-      <button mat-icon-button title="First page" 
-              [disabled]="currentPage === 1" 
-              (click)="goToPage(1)">
-        <mat-icon>first_page</mat-icon>
-      </button>
-      <button mat-icon-button title="Previous page" 
-              [disabled]="currentPage === 1" 
-              (click)="previousPage()">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      
-      <ng-container *ngFor="let page of getPageNumbers()">
-        <button mat-button 
-                [class.active]="page === currentPage"
-                (click)="goToPage(page)"
-                class="page-number">
-          {{ page }}
-        </button>
-      </ng-container>
-      
-      <button mat-icon-button title="Next page" 
-              [disabled]="currentPage === totalPages" 
-              (click)="nextPage()">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
-      <button mat-icon-button title="Last page" 
-              [disabled]="currentPage === totalPages" 
-              (click)="goToPage(totalPages)">
-        <mat-icon>last_page</mat-icon>
-      </button>
-    </div>
-  </div>
+    
+    <mat-paginator 
+      [pageSizeOptions]="[5, 10, 20]" 
+      [pageSize]="10"
+      showFirstLastButtons="true"
+      aria-label="Select page of users">
+    </mat-paginator>
+  </mat-card>
 </div>
 
 <app-add-user-modal 
@@ -166,3 +127,11 @@
   (saveUserEvent)="onSaveUser($event)"
   (deleteUserEvent)="onDeleteUser()">
 </app-add-user-modal>
+
+<!-- Delete Confirmation Modal for Table Actions -->
+<app-delete-confirmation-modal 
+  *ngIf="showDeleteConfirmModal"
+  [userName]="getDeletingUserName()"
+  (confirmDeleteEvent)="confirmDelete()"
+  (cancelDeleteEvent)="cancelDelete()">
+</app-delete-confirmation-modal>

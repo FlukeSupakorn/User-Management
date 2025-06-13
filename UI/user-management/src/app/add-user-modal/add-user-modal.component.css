@@ -212,7 +212,7 @@
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   padding: 24px 32px;
   border-top: 1px solid #e5e7eb;
@@ -220,7 +220,7 @@
   gap: 12px;
 }
 .footer-left {
-  display: none;
+  display: flex;
 }
 .footer-right {
   display: flex;
@@ -330,13 +330,19 @@
 }
 
 .delete-btn {
-  color: #EF4444;
-  border: 1px solid #EF4444;
-  background: transparent;
+  background: #EF4444;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+  border: none;
+  transition: background 0.2s;
 }
 
 .delete-btn:hover {
-  background: #FEF2F2;
+  background: #DC2626;
 }
 
 .delete-btn mat-icon {

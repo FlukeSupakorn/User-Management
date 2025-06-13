@@ -54,3 +54,14 @@ main.server.ts
 # Others
 *.bak
 *.orig
+*.dll
+*.dll
+*.dll
+API/user-management.API/user-management.API/bin/Debug/net9.0/user-management.API.dll
+*.exe
+*.pdb
+*.json
+*.cache
+*.txt
+*.editorconfig
+*.md

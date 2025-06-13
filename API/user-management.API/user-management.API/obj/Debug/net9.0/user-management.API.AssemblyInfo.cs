@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("user-management.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d88f0991160e890f97b05df672825824fd8a7b68")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5fe7d46e8b9825f0ae5a27ecf78e86856a584c54")]
 [assembly: System.Reflection.AssemblyProductAttribute("user-management.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("user-management.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

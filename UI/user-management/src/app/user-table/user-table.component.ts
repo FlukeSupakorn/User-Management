@@ -1,6 +1,6 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
@@ -8,10 +8,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { FormsModule } from '@angular/forms';
 import { AddUserModalComponent} from '../add-user-modal/add-user-modal.component';
+import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import { UserService, UserFormData } from '../services/user.service';
 
 export interface UserPermission {
@@ -49,35 +50,40 @@ export interface UserData {
     MatInputModule,
     MatSelectModule,
     MatCardModule,
-    MatPaginatorModule,
     MatMenuModule,
+    MatPaginatorModule,
     FormsModule,
-    AddUserModalComponent
+    AddUserModalComponent,
+    DeleteConfirmationModalComponent
   ],
   templateUrl: './user-table.component.html',
   styleUrl: './user-table.component.css'
 })
-export class UserTableComponent implements OnInit {
+export class UserTableComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  
   displayedColumns: string[] = ['name', 'userRole', 'createDate', 'role', 'action'];
   showAddUserModal = false;
   showEditUserModal = false;
+  showDeleteConfirmModal = false;
   editingUser: UserFormData | null = null;
-  currentPage = 1;
-  itemsPerPage = 5;
-  totalItems = 0;
-  totalPages = 0;
+  deletingUser: UserData | null = null;
   searchTerm = '';
   sortBy = 'name';
   sortDirection: 'asc' | 'desc' = 'asc';
   currentSort = 'name';
   allUsers: UserData[] = [];
   filteredUsers: UserData[] = [];
-  dataSource: UserData[] = [];
+  dataSource = new MatTableDataSource<UserData>([]);
 
   constructor(private userService: UserService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.fetchUsersFromApi();
+  }
+
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
   }  fetchUsersFromApi() {
     console.log('Fetching users from API...');
     this.userService.getUsers().subscribe({
@@ -109,7 +115,7 @@ export class UserTableComponent implements OnInit {
         }
         
         this.applyFilter();
-        console.log('Filter applied, dataSource length:', this.dataSource.length);
+        console.log('Filter applied, dataSource length:', this.dataSource.data.length);
       },
       error: (err) => {
         console.error('Error fetching users:', err);
@@ -118,11 +124,8 @@ export class UserTableComponent implements OnInit {
       }
     });
   }
-
   initializeData() {
     this.filteredUsers = [...this.allUsers];
-    this.totalItems = this.filteredUsers.length;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
     this.updateDisplayedData();
   }
   applyFilter() {
@@ -130,6 +133,7 @@ export class UserTableComponent implements OnInit {
     console.log('allUsers length:', this.allUsers.length);
     
     if (!this.searchTerm.trim()) {
+      this.dataSource.filter = '';
       this.filteredUsers = [...this.allUsers];
     } else {
       const searchLower = this.searchTerm.toLowerCase();
@@ -142,12 +146,9 @@ export class UserTableComponent implements OnInit {
     
     console.log('filteredUsers length:', this.filteredUsers.length);
     
-    this.totalItems = this.filteredUsers.length;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.currentPage = 1;
     this.updateDisplayedData();
     
-    console.log('After updateDisplayedData, dataSource length:', this.dataSource.length);
+    console.log('After updateDisplayedData, dataSource length:', this.dataSource.data.length);
   }
 
   sortData(column: string) {
@@ -168,45 +169,15 @@ export class UserTableComponent implements OnInit {
       }
       return this.sortDirection === 'desc' ? comparison * -1 : comparison;
     });
-    this.updateDisplayedData();
-  }
+    this.updateDisplayedData();  }
 
   onSortChange(column: string) {
     this.currentSort = column;
     this.sortData(column);
   }
 
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.updateDisplayedData();
-    }
-  }
-
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.updateDisplayedData();
-    }
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.updateDisplayedData();
-    }
-  }
-
-  changeItemsPerPage(newSize: number) {
-    this.itemsPerPage = newSize;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.updateDisplayedData();
-  }
-
   updateDisplayedData() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.dataSource = this.filteredUsers.slice(startIndex, endIndex);
+    this.dataSource.data = [...this.filteredUsers];
   }
 
   getRoleClass(role: string): string {
@@ -228,25 +199,7 @@ export class UserTableComponent implements OnInit {
     if (this.sortBy !== column) {
       return 'unfold_more';
     }
-    return this.sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
-  }
-  getPageNumbers(): number[] {
-    const pages = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  getEndIndex(): number {
-    return Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
-  }
+    return this.sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';  }
   openAddUserModal() {
     this.showAddUserModal = true;
   }
@@ -377,19 +330,36 @@ export class UserTableComponent implements OnInit {
   }
   editUser(user: UserData) {
     this.openEditUserModal(user);
-  }  deleteUser(user: UserData) {
-    if (!user.userId) {
-      console.error('User ID is missing');
+  }
+  deleteUser(user: UserData) {
+    console.log('Delete button pressed for user:', user.name, 'ID:', user.userId);
+    this.deletingUser = user;
+    this.showDeleteConfirmModal = true;
+  }
+
+  confirmDelete() {
+    if (!this.deletingUser?.userId) {
       return;
-    }    this.userService.deleteUser(user.userId).subscribe({
-      next: (response) => {
-        console.log('User deleted successfully');
-        // Refetch all users from API to ensure consistency
+    }
+    this.userService.deleteUser(this.deletingUser.userId).subscribe({
+      next: () => {
         this.fetchUsersFromApi();
+        this.cancelDelete();
       },
-      error: (error) => {
-        console.error('Error deleting user:', error);
+      error: () => {
+        this.cancelDelete();
       }
     });
+  }
+
+  cancelDelete() {
+    this.showDeleteConfirmModal = false;
+    this.deletingUser = null;
+  }
+
+  getDeletingUserName(): string {
+    const name = this.deletingUser ? this.deletingUser.name : '';
+    console.log('getDeletingUserName called, returning:', name);
+    return name;
   }
 }

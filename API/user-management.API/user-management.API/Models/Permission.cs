@@ -16,7 +16,6 @@ namespace user_management.API.Models
         public string? Description { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-        public bool IsActive { get; set; } = true;
 
         // Navigation properties
         public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();

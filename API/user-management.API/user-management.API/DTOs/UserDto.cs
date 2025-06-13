@@ -11,7 +11,6 @@ namespace user_management.API.DTOs
         public string Role { get; set; } = string.Empty; // Add role name
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
-        public bool IsActive { get; set; }
     }public class CreateUserDto
     {
         public string FirstName { get; set; } = string.Empty;

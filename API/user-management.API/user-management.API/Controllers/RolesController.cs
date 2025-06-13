@@ -24,14 +24,12 @@ namespace user_management.API.Controllers
             try
             {
                 var roles = await _context.Roles
-                    .Where(r => r.IsActive)
                     .Select(r => new RoleDto
                     {
                         RoleId = r.RoleId,
                         RoleName = r.RoleName,
                         Description = r.Description,
                         CreatedDate = r.CreatedDate,
-                        IsActive = r.IsActive
                     })
                     .ToListAsync();
 
@@ -50,14 +48,13 @@ namespace user_management.API.Controllers
             try
             {
                 var role = await _context.Roles
-                    .Where(r => r.RoleId == id && r.IsActive)
+                    .Where(r => r.RoleId == id)
                     .Select(r => new RoleDto
                     {
                         RoleId = r.RoleId,
                         RoleName = r.RoleName,
                         Description = r.Description,
                         CreatedDate = r.CreatedDate,
-                        IsActive = r.IsActive
                     })
                     .FirstOrDefaultAsync();
 
@@ -100,7 +97,6 @@ namespace user_management.API.Controllers
                     RoleName = createRoleDto.RoleName,
                     Description = createRoleDto.Description,
                     CreatedDate = DateTime.UtcNow,
-                    IsActive = true
                 };
 
                 _context.Roles.Add(role);
@@ -112,7 +108,6 @@ namespace user_management.API.Controllers
                     RoleName = role.RoleName,
                     Description = role.Description,
                     CreatedDate = role.CreatedDate,
-                    IsActive = role.IsActive
                 };
 
                 return CreatedAtAction(nameof(GetRole), new { id = role.RoleId }, 
@@ -147,7 +142,6 @@ namespace user_management.API.Controllers
 
                 role.RoleName = updateRoleDto.RoleName;
                 role.Description = updateRoleDto.Description;
-                role.IsActive = updateRoleDto.IsActive;
 
                 await _context.SaveChangesAsync();
 
@@ -157,7 +151,6 @@ namespace user_management.API.Controllers
                     RoleName = role.RoleName,
                     Description = role.Description,
                     CreatedDate = role.CreatedDate,
-                    IsActive = role.IsActive
                 };
 
                 return Ok(ApiResponse<RoleDto>.SuccessResult(roleDto, "Role updated successfully"));
@@ -185,8 +178,7 @@ namespace user_management.API.Controllers
                     return BadRequest(ApiResponse<object>.FailureResult("Cannot delete role that is assigned to users"));
                 }
 
-                // Soft delete - set IsActive to false
-                role.IsActive = false;
+       
 
                 await _context.SaveChangesAsync();
 
