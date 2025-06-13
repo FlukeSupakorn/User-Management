@@ -87,77 +87,79 @@ namespace user_management.API.Controllers
 
         
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto createUserDto)
+public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto createUserDto)
+{
+    try
+    {
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(createUserDto.FirstName) ||
+            string.IsNullOrWhiteSpace(createUserDto.LastName) ||
+            string.IsNullOrWhiteSpace(createUserDto.Email) ||
+            string.IsNullOrWhiteSpace(createUserDto.Username) ||
+            string.IsNullOrWhiteSpace(createUserDto.Password) ||
+            createUserDto.RoleId <= 0)
         {
-            try
-            {                
-                if (string.IsNullOrWhiteSpace(createUserDto.FirstName) ||
-                    string.IsNullOrWhiteSpace(createUserDto.LastName) ||
-                    string.IsNullOrWhiteSpace(createUserDto.Email) ||
-                    string.IsNullOrWhiteSpace(createUserDto.Username) ||
-                    string.IsNullOrWhiteSpace(createUserDto.Password) ||
-                    createUserDto.RoleId <= 0)
-                {
-                    return BadRequest(ApiResponse<UserDto>.FailureResult("All required fields must be provided"));
-                }
-
-                
-                var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == createUserDto.RoleId);
-                if (!roleExists)
-                {
-                    return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
-                }
-
-                
-                var existingUser = await _context.Users
-                    .AnyAsync(u => u.Username == createUserDto.Username || u.Email == createUserDto.Email);
-
-                if (existingUser)
-                {
-                    return Conflict(ApiResponse<UserDto>.FailureResult("Username or email already exists"));
-                }
-
-                
-                string hashedPassword = HashPassword(createUserDto.Password);                var user = new User
-                {
-                    FirstName = createUserDto.FirstName,
-                    LastName = createUserDto.LastName,
-                    Email = createUserDto.Email,
-                    Phone = createUserDto.Phone,
-                    Username = createUserDto.Username,
-                    PasswordHash = hashedPassword,
-                    RoleId = createUserDto.RoleId,
-                    CreatedDate = DateTime.UtcNow,
-                };                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                
-                var createdUser = await _context.Users
-                    .Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.UserId == user.UserId);
-
-                var userDto = new UserDto
-                {
-                    UserId = createdUser.UserId,
-                    FirstName = createdUser.FirstName,
-                    LastName = createdUser.LastName,
-                    Email = createdUser.Email,
-                    Phone = createdUser.Phone,
-                    Username = createdUser.Username,
-                    RoleId = createdUser.RoleId,
-                    Role = createdUser.Role != null ? createdUser.Role.RoleName : "Employee", 
-                    CreatedDate = createdUser.CreatedDate,
-                    UpdatedDate = createdUser.UpdatedDate,
-                };
-
-                return CreatedAtAction(nameof(GetUser), new { id = user.UserId },
-                    ApiResponse<UserDto>.SuccessResult(userDto, "User created successfully"));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<UserDto>.FailureResult("An error occurred while creating the user", new List<string> { ex.Message }));
-            }
+            return BadRequest(ApiResponse<UserDto>.FailureResult("All required fields must be provided"));
         }
+
+        // Normalize username and email for comparison
+        var normalizedUsername = createUserDto.Username.Trim().ToLower();
+        var normalizedEmail = createUserDto.Email.Trim().ToLower();
+
+
+        // Check if role exists
+        var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == createUserDto.RoleId);
+        if (!roleExists)
+        {
+            return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
+        }
+
+        // Hash password
+        string hashedPassword = HashPassword(createUserDto.Password);
+
+        // Create user
+        var user = new User
+        {
+            FirstName = createUserDto.FirstName.Trim(),
+            LastName = createUserDto.LastName.Trim(),
+            Email = createUserDto.Email.Trim(),
+            Phone = createUserDto.Phone?.Trim(),
+            Username = createUserDto.Username.Trim(),
+            PasswordHash = hashedPassword,
+            RoleId = createUserDto.RoleId,
+            CreatedDate = DateTime.UtcNow,
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Fetch created user with role
+        var createdUser = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.UserId == user.UserId);
+
+        var userDto = new UserDto
+        {
+            UserId = createdUser.UserId,
+            FirstName = createdUser.FirstName,
+            LastName = createdUser.LastName,
+            Email = createdUser.Email,
+            Phone = createdUser.Phone,
+            Username = createdUser.Username,
+            RoleId = createdUser.RoleId,
+            Role = createdUser.Role != null ? createdUser.Role.RoleName : "Employee",
+            CreatedDate = createdUser.CreatedDate,
+            UpdatedDate = createdUser.UpdatedDate,
+        };
+
+        return CreatedAtAction(nameof(GetUser), new { id = user.UserId },
+            ApiResponse<UserDto>.SuccessResult(userDto, "User created successfully"));
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, ApiResponse<UserDto>.FailureResult("An error occurred while creating the user", new List<string> { ex.Message }));
+    }
+}
 
         
         [HttpPut("{id}")]

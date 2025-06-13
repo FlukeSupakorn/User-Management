@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { UserService, UserFormData, Role, ApiResponse } from '../services/user.service';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
+import ShortUniqueId from 'short-unique-id';
 
 export interface ModulePermission {
   moduleName: string;
@@ -68,10 +69,13 @@ export class AddUserModalComponent implements OnInit {
   }
 
   generateUserId() {
-    // Generate a random userID (you can customize this logic)
-    const timestamp = Date.now().toString();
-    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const generatedId = `USER${timestamp.slice(-6)}${randomNum}`;
+    // Generate a numeric user ID using short-unique-id library
+    const uid = new ShortUniqueId({ 
+      length: 8,
+      dictionary: '0123456789'.split('') // Only numbers
+    });
+    
+    const generatedId = uid.rnd();
     
     this.userForm.patchValue({ userId: generatedId });
   }

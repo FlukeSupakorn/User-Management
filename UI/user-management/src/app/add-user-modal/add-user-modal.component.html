@@ -72,7 +72,7 @@
     <div class="modal-footer">
       <div class="footer-right">
         <button mat-button class="cancel-btn" (click)="closeModal()">Cancel</button>
-        <button mat-raised-button color="primary" class="add-btn" [disabled]="!isEditMode && !userForm.valid" (click)="saveUser()">{{ isEditMode ? 'Update User' : 'Add User' }}</button>
+        <button mat-raised-button color="primary" class="add-btn" (click)="saveUser()">{{ isEditMode ? 'Update User' : 'Add User' }}</button>
       </div>
     </div>
   </div>
