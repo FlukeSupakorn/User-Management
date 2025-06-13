@@ -12,8 +12,8 @@ using user_management.API.Data;
 namespace user_management.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250613084057_RemoveIsactive")]
-    partial class RemoveIsactive
+    [Migration("20250613180409_AddModulePermissionTable")]
+    partial class AddModulePermissionTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,7 +47,7 @@ namespace user_management.API.Migrations
 
                     b.HasKey("PermissionId");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permission");
                 });
 
             modelBuilder.Entity("user_management.API.Models.Role", b =>
@@ -152,7 +152,7 @@ namespace user_management.API.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("UserPermissions");
+                    b.ToTable("UserPermission");
                 });
 
             modelBuilder.Entity("user_management.API.Models.User", b =>
