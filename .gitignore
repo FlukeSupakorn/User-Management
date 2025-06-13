@@ -65,3 +65,4 @@ API/user-management.API/user-management.API/bin/Debug/net9.0/user-management.API
 *.txt
 *.editorconfig
 *.md
+API/user-management.API/user-management.API/obj/Debug/net9.0/user-management.API.AssemblyInfo.cs
