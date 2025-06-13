@@ -47,6 +47,7 @@ export class AddUserModalComponent implements OnInit {
 
   userForm!: FormGroup;
   showDeleteConfirm = false;
+  showValidationErrors = false;
   roles: Role[] = [];
   modulePermissions: ModulePermission[] = [
     { moduleName: 'Super Admin', read: false, write: false, delete: false },
@@ -219,7 +220,8 @@ export class AddUserModalComponent implements OnInit {
         this.userService.createUser(userData).subscribe({
           next: (response: ApiResponse<UserFormData>) => {
             if (response.success) {
-              alert('User saved successfully!');
+              // Emit the saved user data to parent to trigger refresh
+              this.saveUserEvent.emit(userData);
               this.closeModal();
             } else {
               alert('Error saving user: ' + response.message);
@@ -232,14 +234,15 @@ export class AddUserModalComponent implements OnInit {
         });
       }
     } else {
-      
+      // Enable validation display and mark all fields as touched
+      this.showValidationErrors = true;
       Object.keys(this.userForm.controls).forEach(key => {
         const control = this.userForm.get(key);
         if (control && control.invalid) {
           control.markAsTouched();
         }
       });
-      alert('Please fill in all required fields correctly.');
+      // Visual feedback only - no alert popup
     }
   }
 
@@ -280,5 +283,11 @@ export class AddUserModalComponent implements OnInit {
     }
     const formData = this.userForm.value;
     return `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'this user';
+  }
+
+  shouldShowError(fieldName: string): boolean {
+    if (!this.showValidationErrors) return false;
+    const field = this.userForm.get(fieldName);
+    return field ? field.invalid && field.touched : false;
   }
 }

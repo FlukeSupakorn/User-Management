@@ -88,6 +88,24 @@
   box-shadow: none;
   min-height: 48px;
 }
+
+.form-field.error .mat-mdc-form-field-flex {
+  border: 2px solid #EF4444 !important;
+  box-shadow: 0 0 0 1px #EF4444 !important;
+}
+
+.form-field.error input {
+  color: #EF4444;
+}
+
+.form-field.error .mat-mdc-select-value {
+  color: #EF4444;
+}
+
+.form-field.error .mat-mdc-form-field-flex:focus-within {
+  border: 2px solid #DC2626 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
 .form-field .mat-mdc-text-field-wrapper {
   padding: 0 12px;
 }

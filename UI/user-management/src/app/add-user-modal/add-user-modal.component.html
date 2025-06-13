@@ -11,33 +11,33 @@
     <div class="modal-content">
       <!-- User Form Grid -->
       <form [formGroup]="userForm" class="user-form">
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('userId')">
           <input matInput formControlName="userId" placeholder="User ID *" readonly>
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('firstName')">
           <input matInput formControlName="firstName" placeholder="First Name *">
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('lastName')">
           <input matInput formControlName="lastName" placeholder="Last Name *">
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('email')">
           <input matInput formControlName="email" placeholder="Email ID *">
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('phone')">
           <input matInput formControlName="phone" placeholder="Mobile No">
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('roleId')">
           <mat-select formControlName="roleId" placeholder="Select Role Type *">
             <mat-option *ngFor="let role of roles" [value]="role.roleId">{{ role.roleName }}</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field class="form-field" >
+        <mat-form-field class="form-field" [class.error]="shouldShowError('username')">
           <input matInput formControlName="username" placeholder="Username *">
         </mat-form-field>
-        <mat-form-field class="form-field" *ngIf="!isEditMode">
+        <mat-form-field class="form-field" *ngIf="!isEditMode" [class.error]="shouldShowError('password')">
           <input matInput type="password" formControlName="password" placeholder="Password *">
         </mat-form-field>
-        <mat-form-field class="form-field" *ngIf="!isEditMode">
+        <mat-form-field class="form-field" *ngIf="!isEditMode" [class.error]="shouldShowError('confirmPassword')">
           <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm Password *">
         </mat-form-field>
       </form>

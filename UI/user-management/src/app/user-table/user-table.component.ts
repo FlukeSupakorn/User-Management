@@ -289,32 +289,10 @@ export class UserTableComponent implements OnInit, AfterViewInit {
         }
       });
     } else {
-      // Add mode - call API to create user
-      const createData: UserFormData = {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        phone: userData.phone,
-        roleId: userData.roleId,
-        username: userData.username,
-        password: userData.password
-      };        this.userService.createUser(createData).subscribe({
-          next: (response) => {
-            if (response.success) {
-              console.log('User created successfully');
-              // Refetch all users from API to ensure consistency
-              this.fetchUsersFromApi();
-            } else {
-              console.error('Error creating user:', response.message);
-            }
-            this.closeAddUserModal();
-          },
-          error: (error) => {
-            console.error('Error creating user:', error);
-            // Still close the modal but show the error
-            this.closeAddUserModal();
-          }
-        });
+      // Add mode - the modal already handled the API call, just refresh the table
+      console.log('User added successfully, refreshing table');
+      this.fetchUsersFromApi();
+      this.closeAddUserModal();
     }
   }
 
