@@ -2,6 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface UserPermission {
+  permissionId?: string;
+  moduleName?: string;
+  isReadable: boolean;
+  isWritable: boolean;
+  isDeletable: boolean;
+}
+
 export interface UserFormData {
   userId?: string;
   firstName?: string;
@@ -11,6 +19,7 @@ export interface UserFormData {
   roleId?: number;
   username?: string;
   password?: string;
+  permissions?: UserPermission[];
 }
 
 export interface Role {

@@ -8,7 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { UserService, UserFormData, Role, ApiResponse } from '../services/user.service';
+import { UserService, UserFormData, UserPermission, Role, ApiResponse } from '../services/user.service';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import ShortUniqueId from 'short-unique-id';
 
@@ -50,10 +50,13 @@ export class AddUserModalComponent implements OnInit {
   showValidationErrors = false;
   roles: Role[] = [];
   modulePermissions: ModulePermission[] = [
-    { moduleName: 'Super Admin', read: false, write: false, delete: false },
-    { moduleName: 'Admin', read: false, write: false, delete: false },
-    { moduleName: 'Employee', read: false, write: false, delete: false },
-    { moduleName: 'Lorem Ipsum', read: false, write: false, delete: false }
+    { moduleName: 'Users', read: false, write: false, delete: false },
+    { moduleName: 'Reports', read: false, write: false, delete: false },
+    { moduleName: 'Settings', read: false, write: false, delete: false },
+    { moduleName: 'Dashboard', read: false, write: false, delete: false },
+    { moduleName: 'Inventory', read: false, write: false, delete: false },
+    { moduleName: 'Orders', read: false, write: false, delete: false },
+    { moduleName: 'Analytics', read: false, write: false, delete: false }
   ];
   private apiUrl = 'https://localhost:7134/api';
 
@@ -163,10 +166,10 @@ export class AddUserModalComponent implements OnInit {
       this.userForm.patchValue(formValue);
 
       
-      if ((this.editUserData as any).permission) {
-        const userPermissions = (this.editUserData as any).permission;
+      if ((this.editUserData as any).permissions) {
+        const userPermissions = (this.editUserData as any).permissions;
         userPermissions.forEach((perm: any) => {
-          const modulePermission = this.modulePermissions.find(mp => mp.moduleName === perm.permissionId);
+          const modulePermission = this.modulePermissions.find(mp => mp.moduleName === perm.moduleName);
           if (modulePermission) {
             modulePermission.read = perm.isReadable;
             modulePermission.write = perm.isWritable;
@@ -189,15 +192,15 @@ export class AddUserModalComponent implements OnInit {
   }  saveUser() {
     if (this.userForm.valid || this.isEditMode) {
       const formData = this.userForm.value;
-      const userData: UserFormData & { permission?: any[] } = {
+      const userData: UserFormData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         username: formData.username,
         roleId: parseInt(formData.roleId),
-        permission: this.modulePermissions.map(perm => ({
-          permissionId: perm.moduleName,
+        permissions: this.modulePermissions.map(perm => ({
+          moduleName: perm.moduleName,
           isReadable: perm.read,
           isWritable: perm.write,
           isDeletable: perm.delete
