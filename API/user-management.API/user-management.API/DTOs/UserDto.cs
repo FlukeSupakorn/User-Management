@@ -28,6 +28,5 @@ namespace user_management.API.DTOs
         public string Phone { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public int RoleId { get; set; }
-        public bool IsActive { get; set; }
     }
 }

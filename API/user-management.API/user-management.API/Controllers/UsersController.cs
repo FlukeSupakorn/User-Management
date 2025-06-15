@@ -107,9 +107,9 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
         var normalizedEmail = createUserDto.Email.Trim().ToLower();
 
 
-        // Check if role exists
-        var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == createUserDto.RoleId);
-        if (!roleExists)
+        // Fetch the role
+        var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == createUserDto.RoleId);
+        if (role == null)
         {
             return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
         }
@@ -127,6 +127,7 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
             Username = createUserDto.Username.Trim(),
             PasswordHash = hashedPassword,
             RoleId = createUserDto.RoleId,
+            Role = role,
             CreatedDate = DateTime.UtcNow,
         };
 
@@ -183,11 +184,13 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
                 
                 if (updateUserDto.RoleId > 0)
                 {
-                    var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == updateUserDto.RoleId);
-                    if (!roleExists)
+                    var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == updateUserDto.RoleId);
+                    if (role == null)
                     {
                         return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
                     }
+                    user.RoleId = updateUserDto.RoleId;
+                    user.Role = role;
                 }
 
                 user.FirstName = updateUserDto.FirstName;
@@ -195,8 +198,8 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
                 user.Email = updateUserDto.Email;
                 user.Phone = updateUserDto.Phone;
                 user.Username = updateUserDto.Username;
-                user.RoleId = updateUserDto.RoleId;
-                user.UpdatedDate = DateTime.UtcNow;                await _context.SaveChangesAsync();
+                // RoleId and Role are now set in the role validation block above
+                user.UpdatedDate = DateTime.UtcNow;
 
                 
                 var updatedUser = await _context.Users

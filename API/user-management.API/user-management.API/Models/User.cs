@@ -33,8 +33,9 @@ namespace user_management.API.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedDate { get; set; }       public int RoleId { get; set; }
-        public Role Role { get; set; } 
-        public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
+        public DateTime? UpdatedDate { get; set; }
+        
+        public int RoleId { get; set; }
+        public required Role Role { get; set; }
     }
 }

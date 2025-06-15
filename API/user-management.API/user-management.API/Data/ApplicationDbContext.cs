@@ -25,9 +25,7 @@ namespace user_management.API.Data
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId);
 
-            // Configure many-to-many relationship between Users and Permissions
-            modelBuilder.Entity<UserPermission>()
-                .HasKey(up => new { up.UserId, up.PermissionId });
+
 
         }
     }
