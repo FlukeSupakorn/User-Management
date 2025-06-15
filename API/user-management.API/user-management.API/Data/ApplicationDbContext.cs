@@ -14,6 +14,7 @@ namespace user_management.API.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<ModulePermission> ModulePermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,7 +26,17 @@ namespace user_management.API.Data
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId);
 
+            // Configure relationship between Users and ModulePermissions (one-to-many)
+            modelBuilder.Entity<ModulePermission>()
+                .HasOne(mp => mp.User)
+                .WithMany()
+                .HasForeignKey(mp => mp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure ModulePermission table
+            modelBuilder.Entity<ModulePermission>()
+                .HasIndex(mp => new { mp.UserId, mp.ModuleName })
+                .IsUnique();
 
         }
     }
