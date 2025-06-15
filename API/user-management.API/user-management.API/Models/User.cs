@@ -37,5 +37,7 @@ namespace user_management.API.Models
         
         public int RoleId { get; set; }
         public required Role Role { get; set; }
+        
+        public ICollection<ModulePermission> ModulePermissions { get; set; } = new List<ModulePermission>();
     }
 }

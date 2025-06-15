@@ -24,20 +24,30 @@ namespace user_management.API.Controllers
         public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetUsers()
         {
             try
-            {                var users = await _context.Users
-                    .Include(u => u.Role) 
+            {
+                var users = await _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.ModulePermissions)
                     .Select(u => new UserDto
                     {
                         UserId = u.UserId,
                         FirstName = u.FirstName,
                         LastName = u.LastName,
                         Email = u.Email,
-                        Phone = u.Phone,
+                        Phone = u.Phone ?? string.Empty,
                         Username = u.Username,
                         RoleId = u.RoleId,
                         Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
+                        Permissions = u.ModulePermissions != null ? u.ModulePermissions.Select(p => new UserPermissionDto
+                        {
+                            PermissionId = p.PermissionId.ToString(),
+                            ModuleName = p.ModuleName,
+                            IsReadable = p.CanRead,
+                            IsWritable = p.CanWrite,
+                            IsDeletable = p.CanDelete
+                        }).ToList() : new List<UserPermissionDto>()
                     })
                     .ToListAsync();
 
@@ -45,7 +55,15 @@ namespace user_management.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse<List<UserDto>>.FailureResult("An error occurred while retrieving users", new List<string> { ex.Message }));
+                // Log the full exception details
+                var errorDetails = new List<string> 
+                { 
+                    ex.Message,
+                    ex.InnerException?.Message ?? "No inner exception",
+                    ex.StackTrace ?? "No stack trace"
+                };
+                
+                return StatusCode(500, ApiResponse<List<UserDto>>.FailureResult($"An error occurred while retrieving users: {ex.Message}", errorDetails));
             }
         }
 
@@ -54,8 +72,10 @@ namespace user_management.API.Controllers
         public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(int id)
         {
             try
-            {                var user = await _context.Users
-                    .Include(u => u.Role) 
+            {
+                var user = await _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.ModulePermissions)
                     .Where(u => u.UserId == id)
                     .Select(u => new UserDto
                     {
@@ -63,12 +83,20 @@ namespace user_management.API.Controllers
                         FirstName = u.FirstName,
                         LastName = u.LastName,
                         Email = u.Email,
-                        Phone = u.Phone,
+                        Phone = u.Phone ?? string.Empty,
                         Username = u.Username,
                         RoleId = u.RoleId,
                         Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
+                        Permissions = u.ModulePermissions != null ? u.ModulePermissions.Select(p => new UserPermissionDto
+                        {
+                            PermissionId = p.PermissionId.ToString(),
+                            ModuleName = p.ModuleName,
+                            IsReadable = p.CanRead,
+                            IsWritable = p.CanWrite,
+                            IsDeletable = p.CanDelete
+                        }).ToList() : new List<UserPermissionDto>()
                     })
                     .FirstOrDefaultAsync();
 
@@ -134,9 +162,29 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Fetch created user with role
+        // Create permissions if provided
+        if (createUserDto.Permissions != null && createUserDto.Permissions.Any())
+        {
+            foreach (var permDto in createUserDto.Permissions)
+            {
+                var permission = new ModulePermission
+                {
+                    UserId = user.UserId,
+                    ModuleName = permDto.ModuleName,
+                    CanRead = permDto.IsReadable,
+                    CanWrite = permDto.IsWritable,
+                    CanDelete = permDto.IsDeletable,
+                    User = user
+                };
+                _context.ModulePermissions.Add(permission);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        // Fetch created user with role and permissions
         var createdUser = await _context.Users
             .Include(u => u.Role)
+            .Include(u => u.ModulePermissions)
             .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
         var userDto = new UserDto
@@ -151,6 +199,14 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
             Role = createdUser.Role != null ? createdUser.Role.RoleName : "Employee",
             CreatedDate = createdUser.CreatedDate,
             UpdatedDate = createdUser.UpdatedDate,
+            Permissions = createdUser.ModulePermissions.Select(p => new UserPermissionDto
+            {
+                PermissionId = p.PermissionId.ToString(),
+                ModuleName = p.ModuleName,
+                IsReadable = p.CanRead,
+                IsWritable = p.CanWrite,
+                IsDeletable = p.CanDelete
+            }).ToList()
         };
 
         return CreatedAtAction(nameof(GetUser), new { id = user.UserId },
@@ -201,9 +257,38 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
                 // RoleId and Role are now set in the role validation block above
                 user.UpdatedDate = DateTime.UtcNow;
 
+                await _context.SaveChangesAsync();
+
+                // Update permissions if provided
+                if (updateUserDto.Permissions != null)
+                {
+                    // Remove existing permissions
+                    var existingPermissions = await _context.ModulePermissions
+                        .Where(p => p.UserId == id)
+                        .ToListAsync();
+                    _context.ModulePermissions.RemoveRange(existingPermissions);
+
+                    // Add new permissions
+                    foreach (var permDto in updateUserDto.Permissions)
+                    {
+                        var permission = new ModulePermission
+                        {
+                            UserId = id,
+                            ModuleName = permDto.ModuleName,
+                            CanRead = permDto.IsReadable,
+                            CanWrite = permDto.IsWritable,
+                            CanDelete = permDto.IsDeletable,
+                            User = user
+                        };
+                        _context.ModulePermissions.Add(permission);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 
                 var updatedUser = await _context.Users
                     .Include(u => u.Role)
+                    .Include(u => u.ModulePermissions)
                     .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
                 var userDto = new UserDto
@@ -218,6 +303,14 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
                     Role = updatedUser.Role != null ? updatedUser.Role.RoleName : "Employee", 
                     CreatedDate = updatedUser.CreatedDate,
                     UpdatedDate = updatedUser.UpdatedDate,
+                    Permissions = updatedUser.ModulePermissions.Select(p => new UserPermissionDto
+                    {
+                        PermissionId = p.PermissionId.ToString(),
+                        ModuleName = p.ModuleName,
+                        IsReadable = p.CanRead,
+                        IsWritable = p.CanWrite,
+                        IsDeletable = p.CanDelete
+                    }).ToList()
                 };
 
                 return Ok(ApiResponse<UserDto>.SuccessResult(userDto, "User updated successfully"));

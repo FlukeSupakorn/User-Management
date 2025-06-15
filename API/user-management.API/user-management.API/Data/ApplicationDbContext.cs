@@ -29,7 +29,7 @@ namespace user_management.API.Data
             // Configure relationship between Users and ModulePermissions (one-to-many)
             modelBuilder.Entity<ModulePermission>()
                 .HasOne(mp => mp.User)
-                .WithMany()
+                .WithMany(u => u.ModulePermissions)
                 .HasForeignKey(mp => mp.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 

@@ -399,15 +399,16 @@
 .action-buttons {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   height: 32px;
-  color: #5F6368;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: 0;
 }
 
 .edit-btn:hover {
