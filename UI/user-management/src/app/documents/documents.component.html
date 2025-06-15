@@ -57,7 +57,7 @@
           <div class="toolbar-top">
             <mat-form-field class="search-field" appearance="outline">
               <mat-icon matPrefix>search</mat-icon>
-              <input matInput placeholder="Search documents..." #searchInput>
+              <input matInput placeholder="Search documents..." [(ngModel)]="searchTerm" (input)="onSearchChange()">
             </mat-form-field>
 
             <div class="toolbar-right">
@@ -126,22 +126,36 @@
           <span class="document-count">List your document from here</span>
         </div>
 
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Loading documents...</p>
+        </div>
+
         <!-- Documents List -->
-        <div class="documents-list">
-          <div *ngFor="let document of documents" class="document-item">
+        <div *ngIf="!isLoading" class="documents-list">
+          <!-- Empty State -->
+          <div *ngIf="filteredDocuments.length === 0 && !isLoading" class="empty-state">
+            <mat-icon class="empty-icon">folder_open</mat-icon>
+            <h3>{{ searchTerm ? 'No documents match your search' : 'No documents found' }}</h3>
+            <p>{{ searchTerm ? 'Try adjusting your search terms' : 'Start by adding your first document' }}</p>
+          </div>
+
+          <!-- Document Items -->
+          <div *ngFor="let document of filteredDocuments" class="document-item">
             <div class="document-icon">
               <mat-icon>{{ document.icon }}</mat-icon>
             </div>
             <div class="document-info">
               <h3 class="document-title">{{ document.title }}</h3>
-              <p class="document-date">{{ document.date }}</p>
+              <p class="document-date">{{ formatDate(document.date) }}</p>
               <p class="document-description">{{ document.description }}</p>
             </div>
             <div class="document-actions-right">
               <button mat-icon-button class="edit-btn">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button class="delete-btn">
+              <button mat-icon-button class="delete-btn" (click)="deleteDocument(document.documentId)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
