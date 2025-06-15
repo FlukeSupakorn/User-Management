@@ -212,20 +212,63 @@
 }
 .permission-checkbox {
   justify-content: center;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0;
 }
 .permission-row:hover {
   background-color: #f5faff;
 }
 
-::ng-deep .mat-mdc-checkbox .mdc-checkbox {
-  padding: 4px;
+/* Checkbox styling for better centering and display */
+::ng-deep .permission-checkbox .mat-mdc-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
-::ng-deep .mat-mdc-checkbox .mdc-checkbox__background {
+
+::ng-deep .permission-checkbox .mdc-checkbox {
+  padding: 0;
+  margin: 0;
+}
+
+::ng-deep .permission-checkbox .mdc-checkbox__background {
   border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
-::ng-deep .mat-mdc-checkbox .mdc-checkbox__native-control:enabled:checked~.mdc-checkbox__background {
+
+::ng-deep .permission-checkbox .mdc-checkbox__native-control {
+  width: 18px;
+  height: 18px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+::ng-deep .permission-checkbox .mdc-checkbox__checkmark {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+::ng-deep .permission-checkbox .mdc-checkbox__native-control:enabled:checked~.mdc-checkbox__background {
   background-color: #1976d2;
   border-color: #1976d2;
+}
+
+::ng-deep .permission-checkbox .mdc-checkbox__ripple {
+  width: 40px;
+  height: 40px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .modal-footer {
