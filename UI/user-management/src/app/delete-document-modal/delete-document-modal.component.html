@@ -1,0 +1,27 @@
+<div class="modal-overlay" (click)="onCancelDelete()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">Delete Document</h2>
+      <button mat-icon-button class="close-btn" (click)="onCancelDelete()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="modal-content">
+      <div class="confirmation-message">
+        <p>Are you sure you want to delete <strong>{{ documentTitle }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone.</p>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="footer-right">
+        <button mat-button class="cancel-btn" (click)="onCancelDelete()">Cancel</button>
+        <button mat-raised-button color="warn" class="delete-btn" (click)="onConfirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

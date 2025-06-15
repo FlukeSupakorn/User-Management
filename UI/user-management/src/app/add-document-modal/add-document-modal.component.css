@@ -1,0 +1,294 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background: #fff;
+  border-radius: 16px;
+  width: 95%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(60, 60, 60, 0.18), 0 1.5px 6px rgba(60, 60, 60, 0.08);
+  font-family: 'Inter', 'Roboto', 'SF Pro', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 32px 16px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.close-btn {
+  color: #6b7280;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+  color: #1976d2;
+}
+
+.modal-content {
+  padding: 32px;
+  background: #fff;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.document-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-row {
+  width: 100%;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-field .mat-mdc-form-field-flex {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+  min-height: 48px;
+}
+
+.form-field:focus-within .mat-mdc-form-field-flex {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 1px #1976d2;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px 28px 32px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.footer-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cancel-btn {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.save-btn {
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.save-btn:hover {
+  background: #1565c0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.delete-btn {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  color: white;
+}
+
+/* Required asterisk styling */
+.required-asterisk {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+/* Form field styling */
+::ng-deep .document-form .mat-mdc-form-field-outline {
+  color: #e5e7eb;
+}
+
+::ng-deep .document-form .mat-mdc-form-field-outline-thick {
+  color: #1976d2;
+}
+
+::ng-deep .document-form .mat-mdc-form-field-label {
+  color: #6b7280;
+}
+
+::ng-deep .document-form .mat-mdc-form-field-required-marker {
+  display: none !important;
+}
+
+::ng-deep .document-form .mat-mdc-input-element {
+  color: #111827;
+  padding: 16px 14px !important;
+  line-height: 1.5;
+  height: auto;
+}
+
+::ng-deep .document-form .mat-mdc-input-element::placeholder {
+  color: #9ca3af;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+/* Fix input field height and alignment */
+::ng-deep .document-form .mat-mdc-text-field-wrapper {
+  height: 56px !important;
+  display: flex;
+  align-items: center;
+}
+
+::ng-deep .document-form .mat-mdc-form-field-infix {
+  min-height: 56px !important;
+  padding: 16px 0 !important;
+  display: flex;
+  align-items: center;
+}
+
+::ng-deep .document-form .mat-mdc-form-field-flex {
+  align-items: center;
+  min-height: 56px;
+}
+
+/* Date picker styling */
+::ng-deep .document-form .mat-datepicker-toggle {
+  color: #6b7280;
+}
+
+::ng-deep .document-form .mat-datepicker-toggle:hover {
+  color: #1976d2;
+}
+
+/* Textarea styling */
+::ng-deep .document-form textarea.mat-mdc-input-element {
+  resize: vertical;
+  min-height: 80px;
+  padding: 16px 14px !important;
+  line-height: 1.5;
+}
+
+::ng-deep .document-form textarea.mat-mdc-input-element::placeholder {
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* Textarea container styling */
+::ng-deep .document-form .mat-mdc-form-field:has(textarea) .mat-mdc-text-field-wrapper {
+  height: auto !important;
+  min-height: 120px;
+}
+
+::ng-deep .document-form .mat-mdc-form-field:has(textarea) .mat-mdc-form-field-infix {
+  min-height: 120px !important;
+  align-items: flex-start;
+  padding-top: 16px !important;
+}
+
+::ng-deep .document-form .mat-mdc-form-field:has(textarea) .mat-mdc-form-field-flex {
+  align-items: flex-start;
+  min-height: 120px;
+}
+
+/* Error styling */
+::ng-deep .document-form .mat-mdc-form-field.mat-form-field-invalid .mat-mdc-form-field-outline-thick {
+  color: #dc2626;
+}
+
+::ng-deep .document-form .mat-mdc-form-field.mat-form-field-invalid .mat-mdc-form-field-label {
+  color: #dc2626;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .modal-container {
+    width: 98%;
+    max-width: 100%;
+    margin: 10px;
+  }
+
+  .modal-header,
+  .modal-content,
+  .modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .footer-right {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

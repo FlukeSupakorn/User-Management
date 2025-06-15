@@ -62,10 +62,10 @@
 
             <div class="toolbar-right">
               <mat-form-field appearance="outline" class="dropdown-field">
-                <mat-select placeholder="Sort by">
-                  <mat-option value="name">Name</mat-option>
-                  <mat-option value="date">Date</mat-option>
-                  <mat-option value="type">Type</mat-option>
+                <mat-select placeholder="Sort by" [(ngModel)]="sortBy" (selectionChange)="onSortChange()">
+                  <mat-option value="">None</mat-option>
+                  <mat-option value="name">Name (A-Z)</mat-option>
+                  <mat-option value="date">Date (Newest First)</mat-option>
                 </mat-select>
               </mat-form-field>
               <button mat-icon-button class="saved-search-btn" title="Saved searches">
@@ -96,7 +96,8 @@
 
             <div class="dropdown-group">
               <mat-form-field appearance="outline" class="dropdown-field">
-                <mat-select placeholder="This Month">
+                <mat-select placeholder="All Time" [(ngModel)]="dateFilter" (selectionChange)="onDateFilterChange()">
+                  <mat-option value="">All Time</mat-option>
                   <mat-option value="today">Today</mat-option>
                   <mat-option value="week">This Week</mat-option>
                   <mat-option value="month">This Month</mat-option>
@@ -113,7 +114,7 @@
                 </mat-select>
               </mat-form-field>
 
-              <button mat-icon-button class="add-btn" title="Add Document">
+              <button mat-icon-button class="add-btn" title="Add Document" (click)="openAddModal()">
                 <mat-icon>add</mat-icon>
               </button>
             </div>
@@ -149,13 +150,13 @@
             <div class="document-info">
               <h3 class="document-title">{{ document.title }}</h3>
               <p class="document-date">{{ formatDate(document.date) }}</p>
-              <p class="document-description">{{ document.description }}</p>
+              <p class="document-description">{{ truncateText(document.description) }}</p>
             </div>
             <div class="document-actions-right">
-              <button mat-icon-button class="edit-btn">
+              <button mat-icon-button class="edit-btn" (click)="openEditModal(document)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button class="delete-btn" (click)="deleteDocument(document.documentId)">
+              <button mat-icon-button class="delete-btn" (click)="openDeleteModal(document)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -164,4 +165,29 @@
       </div>
     </mat-sidenav-content>
   </mat-sidenav-container>
+
+  <!-- Add Document Modal -->
+  <app-add-document-modal
+    *ngIf="showAddModal"
+    [isEditMode]="false"
+    (closeModalEvent)="closeModal()"
+    (saveDocumentEvent)="onSaveDocument($event)">
+  </app-add-document-modal>
+
+  <!-- Edit Document Modal -->
+  <app-add-document-modal
+    *ngIf="showEditModal"
+    [isEditMode]="true"
+    [editDocumentData]="editDocumentData"
+    (closeModalEvent)="closeModal()"
+    (saveDocumentEvent)="onUpdateDocument($event)">
+  </app-add-document-modal>
+
+  <!-- Delete Document Modal -->
+  <app-delete-document-modal
+    *ngIf="showDeleteModal"
+    [documentTitle]="deleteDocumentData?.title || ''"
+    (confirmDeleteEvent)="confirmDeleteDocument()"
+    (cancelDeleteEvent)="closeDeleteModal()">
+  </app-delete-document-modal>
 </div>

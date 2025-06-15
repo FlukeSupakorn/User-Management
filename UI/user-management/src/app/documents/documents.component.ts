@@ -13,7 +13,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { DocumentService, DocumentDto } from '../services/document.service';
+import { DocumentService, DocumentDto, CreateDocumentDto } from '../services/document.service';
+import { AddDocumentModalComponent } from '../add-document-modal/add-document-modal.component';
+import { DeleteDocumentModalComponent } from '../delete-document-modal/delete-document-modal.component';
 
 export interface DocumentData {
   documentId?: number;
@@ -42,7 +44,9 @@ export interface DocumentData {
     MatMenuModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    SidebarComponent
+    SidebarComponent,
+    AddDocumentModalComponent,
+    DeleteDocumentModalComponent
   ],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css'
@@ -54,6 +58,13 @@ export class DocumentsComponent implements OnInit {
   documents: DocumentData[] = [];
   filteredDocuments: DocumentData[] = [];
   searchTerm: string = '';
+  sortBy: string = '';
+  dateFilter: string = '';
+  showAddModal = false;
+  showEditModal = false;
+  editDocumentData: DocumentData | null = null;
+  showDeleteModal = false;
+  deleteDocumentData: DocumentData | null = null;
 
   constructor(
     private documentService: DocumentService,
@@ -91,24 +102,30 @@ export class DocumentsComponent implements OnInit {
     });
   }
 
-  deleteDocument(documentId: number | undefined): void {
-    if (!documentId) return;
+  openDeleteModal(document: DocumentData): void {
+    this.deleteDocumentData = document;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.deleteDocumentData = null;
+  }
+
+  confirmDeleteDocument(): void {
+    if (!this.deleteDocumentData?.documentId) return;
     
-    if (confirm('Are you sure you want to delete this document?')) {
-      this.documentService.deleteDocument(documentId).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.showSuccess('Document deleted successfully');
-            this.loadDocuments();
-          } else {
-            this.showError(response.message || 'Failed to delete document');
-          }
-        },
-        error: (error) => {
-          this.showError('Failed to delete document');
+    this.documentService.deleteDocument(this.deleteDocumentData.documentId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.loadDocuments();
+          this.closeDeleteModal();
         }
-      });
-    }
+      },
+      error: (error) => {
+        // Handle error silently
+      }
+    });
   }
 
   formatDate(date: Date | string): string {
@@ -118,6 +135,12 @@ export class DocumentsComponent implements OnInit {
       month: 'long', 
       day: 'numeric' 
     });
+  }
+
+  truncateText(text: string | undefined, maxLength: number = 100): string {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 
   private showSuccess(message: string): void {
@@ -134,21 +157,146 @@ export class DocumentsComponent implements OnInit {
     });
   }
 
+  isDateInRange(date: Date, filter: string): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const docDate = new Date(date);
+    docDate.setHours(0, 0, 0, 0);
+
+    switch (filter) {
+      case 'today':
+        return docDate.getTime() === today.getTime();
+      
+      case 'week':
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        return docDate >= weekStart && docDate <= weekEnd;
+      
+      case 'month':
+        return docDate.getMonth() === today.getMonth() && 
+               docDate.getFullYear() === today.getFullYear();
+      
+      case 'year':
+        return docDate.getFullYear() === today.getFullYear();
+      
+      default:
+        return true;
+    }
+  }
+
   filterDocuments(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredDocuments = [...this.documents];
-      return;
+    let filtered = [...this.documents];
+
+    // Apply search filter
+    if (this.searchTerm.trim()) {
+      const searchLower = this.searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(document => 
+        document.title.toLowerCase().includes(searchLower) ||
+        (document.description && document.description.toLowerCase().includes(searchLower))
+      );
     }
 
-    const searchLower = this.searchTerm.toLowerCase().trim();
-    this.filteredDocuments = this.documents.filter(document => 
-      document.title.toLowerCase().includes(searchLower) ||
-      (document.description && document.description.toLowerCase().includes(searchLower))
-    );
+    // Apply date filter
+    if (this.dateFilter) {
+      filtered = filtered.filter(document => 
+        this.isDateInRange(document.date, this.dateFilter)
+      );
+    }
+
+    this.filteredDocuments = filtered;
+    
+    this.sortDocuments();
+  }
+
+  sortDocuments(): void {
+    if (!this.sortBy) return;
+
+    this.filteredDocuments.sort((a, b) => {
+      if (this.sortBy === 'name') {
+        return a.title.localeCompare(b.title);
+      } else if (this.sortBy === 'date') {
+        return b.date.getTime() - a.date.getTime();
+      }
+      return 0;
+    });
   }
 
   onSearchChange(): void {
     this.filterDocuments();
+  }
+
+  onSortChange(): void {
+    this.sortDocuments();
+  }
+
+  onDateFilterChange(): void {
+    this.filterDocuments();
+  }
+
+  openAddModal(): void {
+    this.showAddModal = true;
+  }
+
+  openEditModal(document: DocumentData): void {
+    this.editDocumentData = document;
+    this.showEditModal = true;
+  }
+
+  closeModal(): void {
+    this.showAddModal = false;
+    this.showEditModal = false;
+    this.editDocumentData = null;
+  }
+
+  onSaveDocument(documentData: CreateDocumentDto): void {
+    this.documentService.createDocument(documentData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.loadDocuments();
+          this.closeModal();
+        }
+      },
+      error: (error) => {
+        // Handle error silently
+      }
+    });
+  }
+
+  onUpdateDocument(documentData: CreateDocumentDto): void {
+    if (!this.editDocumentData?.documentId) return;
+    
+    this.documentService.updateDocument(this.editDocumentData.documentId, documentData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.loadDocuments();
+          this.closeModal();
+        }
+      },
+      error: (error) => {
+        // Handle error silently
+      }
+    });
+  }
+
+  onDeleteDocumentFromModal(): void {
+    if (!this.editDocumentData?.documentId) return;
+    
+    this.documentService.deleteDocument(this.editDocumentData.documentId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.showSuccess('Document deleted successfully');
+          this.loadDocuments();
+          this.closeModal();
+        } else {
+          this.showError(response.message || 'Failed to delete document');
+        }
+      },
+      error: (error) => {
+        this.showError('Failed to delete document');
+      }
+    });
   }
 
   toggleSidenav() {
