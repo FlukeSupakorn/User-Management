@@ -68,6 +68,112 @@ namespace user_management.API.Controllers
         }
 
         
+        [HttpPost("DataTable")]
+        public async Task<ActionResult<ApiResponse<UserDataTableResponseDto>>> GetUsersDataTable(UserDataTableRequestDto request)
+        {
+            try
+            {
+                var query = _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.ModulePermissions)
+                    .AsQueryable();
+
+                // Apply search filter
+                if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+                {
+                    var searchTerm = request.SearchTerm.ToLower();
+                    query = query.Where(u => 
+                        u.FirstName.ToLower().Contains(searchTerm) ||
+                        u.LastName.ToLower().Contains(searchTerm) ||
+                        u.Email.ToLower().Contains(searchTerm) ||
+                        u.Username.ToLower().Contains(searchTerm) ||
+                        (u.Role != null && u.Role.RoleName.ToLower().Contains(searchTerm))
+                    );
+                }
+
+                // Apply sorting
+                switch (request.SortBy.ToLower())
+                {
+                    case "firstname":
+                        query = request.SortDirection.ToLower() == "desc" 
+                            ? query.OrderByDescending(u => u.FirstName)
+                            : query.OrderBy(u => u.FirstName);
+                        break;
+                    case "lastname":
+                        query = request.SortDirection.ToLower() == "desc" 
+                            ? query.OrderByDescending(u => u.LastName)
+                            : query.OrderBy(u => u.LastName);
+                        break;
+                    case "email":
+                        query = request.SortDirection.ToLower() == "desc" 
+                            ? query.OrderByDescending(u => u.Email)
+                            : query.OrderBy(u => u.Email);
+                        break;
+                    case "createddate":
+                        query = request.SortDirection.ToLower() == "desc" 
+                            ? query.OrderByDescending(u => u.CreatedDate)
+                            : query.OrderBy(u => u.CreatedDate);
+                        break;
+                    case "role":
+                        query = request.SortDirection.ToLower() == "desc" 
+                            ? query.OrderByDescending(u => u.Role != null ? u.Role.RoleName : "")
+                            : query.OrderBy(u => u.Role != null ? u.Role.RoleName : "");
+                        break;
+                    default:
+                        query = query.OrderBy(u => u.FirstName);
+                        break;
+                }
+
+                // Get total count before pagination
+                var totalRecords = await query.CountAsync();
+
+                // Apply pagination
+                var skip = (request.PageNumber - 1) * request.PageSize;
+                var users = await query
+                    .Skip(skip)
+                    .Take(request.PageSize)
+                    .Select(u => new UserDto
+                    {
+                        UserId = u.UserId,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Email = u.Email,
+                        Phone = u.Phone ?? string.Empty,
+                        Username = u.Username,
+                        RoleId = u.RoleId.ToString(),
+                        Role = u.Role != null ? u.Role.RoleName : "Employee",
+                        CreatedDate = u.CreatedDate,
+                        UpdatedDate = u.UpdatedDate,
+                        Permissions = u.ModulePermissions != null ? u.ModulePermissions.Select(p => new UserPermissionDto
+                        {
+                            PermissionId = p.PermissionId.ToString(),
+                            ModuleName = p.ModuleName,
+                            IsReadable = p.CanRead,
+                            IsWritable = p.CanWrite,
+                            IsDeletable = p.CanDelete
+                        }).ToList() : new List<UserPermissionDto>()
+                    })
+                    .ToListAsync();
+
+                var totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
+
+                var response = new UserDataTableResponseDto
+                {
+                    Data = users,
+                    TotalRecords = totalRecords,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize,
+                    TotalPages = totalPages
+                };
+
+                return Ok(ApiResponse<UserDataTableResponseDto>.SuccessResult(response, "Users retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<UserDataTableResponseDto>.FailureResult("An error occurred while retrieving users", new List<string> { ex.Message }));
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(string id)
         {

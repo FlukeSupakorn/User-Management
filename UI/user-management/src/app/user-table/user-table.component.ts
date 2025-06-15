@@ -13,7 +13,7 @@ import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { FormsModule } from '@angular/forms';
 import { AddUserModalComponent} from '../add-user-modal/add-user-modal.component';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
-import { UserService, UserFormData } from '../services/user.service';
+import { UserService, UserFormData, UserDataTableRequest, UserDataTableResponse, ApiResponse } from '../services/user.service';
 
 export interface UserPermission {
   permissionId: string;
@@ -69,12 +69,19 @@ export class UserTableComponent implements OnInit, AfterViewInit {
   editingUser: UserFormData | null = null;
   deletingUser: UserData | null = null;
   searchTerm = '';
-  sortBy = 'name';
+  sortBy = 'firstName';
   sortDirection: 'asc' | 'desc' = 'asc';
-  currentSort = 'name';
+  currentSort = 'firstName';
   allUsers: UserData[] = [];
   filteredUsers: UserData[] = [];
   dataSource = new MatTableDataSource<UserData>([]);
+  
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 10;
+  totalRecords = 0;
+  totalPages = 0;
+  pageSizeOptions = [5, 10, 15, 25];
 
   constructor(private userService: UserService, private cdr: ChangeDetectorRef) {}
 
@@ -83,102 +90,119 @@ export class UserTableComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
+    // Configure paginator
+    if (this.paginator) {
+      this.paginator.pageSizeOptions = this.pageSizeOptions;
+      this.paginator.pageSize = this.pageSize;
+      
+      // Listen to paginator events
+      this.paginator.page.subscribe((event) => {
+        this.currentPage = event.pageIndex + 1;
+        this.pageSize = event.pageSize;
+        this.fetchUsersFromApi();
+      });
+    }
   }  fetchUsersFromApi() {
-    console.log('Fetching users from API...');
-    this.userService.getUsers().subscribe({
-      next: (response) => {
+    console.log('Fetching users from API with pagination...');
+    
+    const request: UserDataTableRequest = {
+      pageNumber: this.currentPage,
+      pageSize: this.pageSize,
+      searchTerm: this.searchTerm,
+      sortBy: this.sortBy,
+      sortDirection: this.sortDirection
+    };
+
+    console.log('Request parameters:', request);
+
+    this.userService.getUsersDataTable(request).subscribe({
+      next: (response: ApiResponse<UserDataTableResponse>) => {
         console.log('API response:', response);
-        const previousUserCount = this.allUsers.length;
-        this.allUsers = (response.data || []).map((u: any) => ({
-          userId: u.userId,
-          name: `${u.firstName} ${u.lastName}`,
-          email: u.email,
-          createDate: u.createdDate ? new Date(u.createdDate).toLocaleDateString('en-US', {
-            year: 'numeric', month: 'short', day: 'numeric'
-          }) : '',
-          role: u.role || this.getRoleName(u.roleId) || 'Employee',
-          action: 'Lorem ipsum',
-          firstName: u.firstName,
-          lastName: u.lastName,
-          phone: u.phone,
-          roleId: u.roleId,
-          username: u.username
-        }));
-        console.log('Mapped users:', this.allUsers);
-        console.log(`User count changed from ${previousUserCount} to ${this.allUsers.length}`);
-        
-        // Find the updated user and log it
-        const updatedUser = this.allUsers.find(u => u.userId === this.editingUser?.userId);
-        if (updatedUser) {
-          console.log('Updated user in fetched data:', updatedUser);
+        if (response.success && response.data) {
+          const data = response.data;
+          
+          // Map API data to component format
+          this.allUsers = data.data.map((u: any) => ({
+            userId: u.userId,
+            name: `${u.firstName} ${u.lastName}`,
+            email: u.email,
+            createDate: u.createdDate ? new Date(u.createdDate).toLocaleDateString('en-US', {
+              year: 'numeric', month: 'short', day: 'numeric'
+            }) : '',
+            role: u.role || 'Employee',
+            action: 'Lorem ipsum',
+            firstName: u.firstName,
+            lastName: u.lastName,
+            phone: u.phone,
+            roleId: u.roleId,
+            username: u.username
+          }));
+
+          // Update pagination info
+          this.totalRecords = data.totalRecords;
+          this.totalPages = data.totalPages;
+          this.currentPage = data.pageNumber;
+          this.pageSize = data.pageSize;
+
+          // Update paginator
+          if (this.paginator) {
+            this.paginator.length = this.totalRecords;
+            this.paginator.pageIndex = this.currentPage - 1;
+            this.paginator.pageSize = this.pageSize;
+          }
+
+          // Set data source (no more client-side filtering needed)
+          this.dataSource.data = [...this.allUsers];
+          
+          console.log(`Loaded ${this.allUsers.length} users for page ${this.currentPage}/${this.totalPages}`);
+          console.log(`Total records: ${this.totalRecords}`);
         }
-        
-        this.applyFilter();
-        console.log('Filter applied, dataSource length:', this.dataSource.data.length);
       },
       error: (err) => {
         console.error('Error fetching users:', err);
         this.allUsers = [];
-        this.applyFilter();
+        this.dataSource.data = [];
       }
     });
-  }
-  initializeData() {
-    this.filteredUsers = [...this.allUsers];
-    this.updateDisplayedData();
   }
   applyFilter() {
     console.log('applyFilter called, searchTerm:', this.searchTerm);
-    console.log('allUsers length:', this.allUsers.length);
     
-    if (!this.searchTerm.trim()) {
-      this.dataSource.filter = '';
-      this.filteredUsers = [...this.allUsers];
-    } else {
-      const searchLower = this.searchTerm.toLowerCase();
-      this.filteredUsers = this.allUsers.filter(user =>
-        user.name.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower) ||
-        user.role.toLowerCase().includes(searchLower)
-      );
-    }
+    // Reset to page 1 when searching
+    this.currentPage = 1;
     
-    console.log('filteredUsers length:', this.filteredUsers.length);
-    
-    this.updateDisplayedData();
-    
-    console.log('After updateDisplayedData, dataSource length:', this.dataSource.data.length);
+    // Fetch data from server with new search term
+    this.fetchUsersFromApi();
   }
 
   sortData(column: string) {
-    if (this.sortBy === column) {
+    // Map frontend column names to backend field names
+    const columnMap: { [key: string]: string } = {
+      'name': 'firstName',
+      'email': 'email',
+      'createDate': 'createdDate',
+      'role': 'role'
+    };
+
+    if (this.sortBy === (columnMap[column] || column)) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-      this.sortBy = column;
+      this.sortBy = columnMap[column] || column;
       this.sortDirection = 'asc';
     }
-    this.filteredUsers.sort((a: any, b: any) => {
-      const aValue = a[column];
-      const bValue = b[column];
-      let comparison = 0;
-      if (aValue > bValue) {
-        comparison = 1;
-      } else if (aValue < bValue) {
-        comparison = -1;
-      }
-      return this.sortDirection === 'desc' ? comparison * -1 : comparison;
-    });
-    this.updateDisplayedData();  }
+
+    // Reset to page 1 when sorting
+    this.currentPage = 1;
+    
+    // Fetch data from server with new sort parameters
+    this.fetchUsersFromApi();
+  }
 
   onSortChange(column: string) {
     this.currentSort = column;
     this.sortData(column);
   }
 
-  updateDisplayedData() {
-    this.dataSource.data = [...this.filteredUsers];
-  }
 
   getRoleClass(role: string): string {
     switch (role) {
@@ -196,10 +220,21 @@ export class UserTableComponent implements OnInit, AfterViewInit {
   }
 
   getSortIcon(column: string): string {
-    if (this.sortBy !== column) {
+    // Map frontend column names to backend field names for comparison
+    const columnMap: { [key: string]: string } = {
+      'name': 'firstName',
+      'email': 'email',
+      'createDate': 'createdDate',
+      'role': 'role'
+    };
+    
+    const mappedColumn = columnMap[column] || column;
+    
+    if (this.sortBy !== mappedColumn) {
       return 'unfold_more';
     }
-    return this.sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';  }
+    return this.sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
+  }
   openAddUserModal() {
     this.showAddUserModal = true;
   }

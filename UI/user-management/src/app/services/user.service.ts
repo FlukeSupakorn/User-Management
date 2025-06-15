@@ -18,6 +18,22 @@ export interface ModulePermissionDto {
   canDelete: boolean;
 }
 
+export interface UserDataTableRequest {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm: string;
+  sortBy: string;
+  sortDirection: 'asc' | 'desc';
+}
+
+export interface UserDataTableResponse {
+  data: UserFormData[];
+  totalRecords: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface UserFormData {
   userId?: string;
   firstName?: string;
@@ -82,5 +98,9 @@ export class UserService {
 
   getUserModulePermissions(userId: string): Observable<ApiResponse<ModulePermissionDto[]>> {
     return this.http.get<ApiResponse<ModulePermissionDto[]>>(`${this.apiUrl}/ModulePermissions/user/${userId}`, this.getHttpOptions());
+  }
+
+  getUsersDataTable(request: UserDataTableRequest): Observable<ApiResponse<UserDataTableResponse>> {
+    return this.http.post<ApiResponse<UserDataTableResponse>>(`${this.apiUrl}/Users/DataTable`, request, this.getHttpOptions());
   }
 }
