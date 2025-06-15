@@ -143,7 +143,7 @@
           </div>
 
           <!-- Document Items -->
-          <div *ngFor="let document of filteredDocuments" class="document-item">
+          <div *ngFor="let document of filteredDocuments" class="document-item" (click)="openViewModal(document)">
             <div class="document-icon">
               <mat-icon>{{ document.icon }}</mat-icon>
             </div>
@@ -153,10 +153,10 @@
               <p class="document-description">{{ truncateText(document.description) }}</p>
             </div>
             <div class="document-actions-right">
-              <button mat-icon-button class="edit-btn" (click)="openEditModal(document)">
+              <button mat-icon-button class="edit-btn" (click)="openEditModal(document); $event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button class="delete-btn" (click)="openDeleteModal(document)">
+              <button mat-icon-button class="delete-btn" (click)="openDeleteModal(document); $event.stopPropagation()">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -190,4 +190,11 @@
     (confirmDeleteEvent)="confirmDeleteDocument()"
     (cancelDeleteEvent)="closeDeleteModal()">
   </app-delete-document-modal>
+
+  <!-- View Document Modal -->
+  <app-view-document-modal
+    *ngIf="showViewModal"
+    [documentData]="viewDocumentData"
+    (closeModalEvent)="closeViewModal()">
+  </app-view-document-modal>
 </div>

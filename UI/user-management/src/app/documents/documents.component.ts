@@ -16,6 +16,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { DocumentService, DocumentDto, CreateDocumentDto } from '../services/document.service';
 import { AddDocumentModalComponent } from '../add-document-modal/add-document-modal.component';
 import { DeleteDocumentModalComponent } from '../delete-document-modal/delete-document-modal.component';
+import { ViewDocumentModalComponent } from '../view-document-modal/view-document-modal.component';
 
 export interface DocumentData {
   documentId?: number;
@@ -46,7 +47,8 @@ export interface DocumentData {
     MatSnackBarModule,
     SidebarComponent,
     AddDocumentModalComponent,
-    DeleteDocumentModalComponent
+    DeleteDocumentModalComponent,
+    ViewDocumentModalComponent
   ],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css'
@@ -65,6 +67,8 @@ export class DocumentsComponent implements OnInit {
   editDocumentData: DocumentData | null = null;
   showDeleteModal = false;
   deleteDocumentData: DocumentData | null = null;
+  showViewModal = false;
+  viewDocumentData: DocumentData | null = null;
 
   constructor(
     private documentService: DocumentService,
@@ -242,6 +246,16 @@ export class DocumentsComponent implements OnInit {
   openEditModal(document: DocumentData): void {
     this.editDocumentData = document;
     this.showEditModal = true;
+  }
+
+  openViewModal(document: DocumentData): void {
+    this.viewDocumentData = document;
+    this.showViewModal = true;
+  }
+
+  closeViewModal(): void {
+    this.showViewModal = false;
+    this.viewDocumentData = null;
   }
 
   closeModal(): void {
