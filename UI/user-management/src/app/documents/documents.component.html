@@ -48,84 +48,76 @@
       </mat-toolbar>
 
       <!-- Page Content -->
-      <div class="page-content">
-        <!-- Page Header -->
+      <div class="page-content">        <!-- Page Header -->
         <div class="page-header">
           <h1 class="page-title">Documents</h1>
-        </div>        <!-- Search and Controls -->
-        <div class="search-controls">
-          <div class="search-bar">
-            <mat-form-field appearance="outline" class="search-field">
-              <mat-label>Search</mat-label>
+        </div>        <!-- Document Toolbar -->
+        <div class="document-toolbar">
+          <!-- Top Row: Search + Sort -->
+          <div class="toolbar-top">
+            <mat-form-field class="search-field" appearance="outline">
+              <mat-icon matPrefix>search</mat-icon>
               <input matInput placeholder="Search documents..." #searchInput>
-              <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
+
+            <div class="toolbar-right">
+              <mat-form-field appearance="outline" class="dropdown-field">
+                <mat-select placeholder="Sort by">
+                  <mat-option value="name">Name</mat-option>
+                  <mat-option value="date">Date</mat-option>
+                  <mat-option value="type">Type</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-icon-button class="saved-search-btn" title="Saved searches">
+                <mat-icon>bookmark</mat-icon>
+              </button>
+              <button mat-icon-button class="filter-btn" title="Filter options">
+                <mat-icon>tune</mat-icon>
+              </button>
+            </div>
           </div>
-          
-          <div class="control-buttons">
-            <mat-form-field appearance="outline" class="sort-select">
-              <mat-label>Sort by</mat-label>
-              <mat-select>
-                <mat-option value="name">Name</mat-option>
-                <mat-option value="date">Date</mat-option>
-                <mat-option value="type">Type</mat-option>
-              </mat-select>
-            </mat-form-field>
-            
-            <button mat-icon-button class="saved-search-btn" title="Saved searches">
-              <mat-icon>bookmark</mat-icon>
-            </button>
-            
-            <button mat-icon-button class="filter-btn" title="Filter options">
-              <mat-icon>tune</mat-icon>
-            </button>
+
+          <!-- Bottom Row: Icons + Dropdowns + Add -->
+          <div class="toolbar-bottom">
+            <div class="view-controls">
+              <button mat-icon-button class="action-icon view-icon" title="Grid View">
+                <mat-icon>grid_view</mat-icon>
+              </button>
+              <button mat-icon-button class="action-icon list-icon" title="List View">
+                <mat-icon>view_list</mat-icon>
+              </button>
+              <button mat-icon-button class="action-icon delete-icon" title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button mat-icon-button class="action-icon print-icon" title="Print">
+                <mat-icon>print</mat-icon>
+              </button>
+            </div>
+
+            <div class="dropdown-group">
+              <mat-form-field appearance="outline" class="dropdown-field">
+                <mat-select placeholder="This Month">
+                  <mat-option value="today">Today</mat-option>
+                  <mat-option value="week">This Week</mat-option>
+                  <mat-option value="month">This Month</mat-option>
+                  <mat-option value="year">This Year</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="dropdown-field">
+                <mat-select placeholder="Documents">
+                  <mat-option value="all">All Documents</mat-option>
+                  <mat-option value="pdf">PDF Files</mat-option>
+                  <mat-option value="word">Word Documents</mat-option>
+                  <mat-option value="excel">Excel Files</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-icon-button class="add-btn" title="Add Document">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <!-- Document Action Icons -->
-        <div class="document-actions">
-          <button mat-icon-button class="action-icon view-icon" title="Grid View">
-            <mat-icon>grid_view</mat-icon>
-          </button>
-          <button mat-icon-button class="action-icon list-icon" title="List View">
-            <mat-icon>view_list</mat-icon>
-          </button>
-          <button mat-icon-button class="action-icon delete-icon" title="Delete">
-            <mat-icon>delete</mat-icon>
-          </button>
-          <button mat-icon-button class="action-icon print-icon" title="Print">
-            <mat-icon>print</mat-icon>
-          </button>
-          <button mat-icon-button class="action-icon folder-icon" title="New Folder">
-            <mat-icon>create_new_folder</mat-icon>
-          </button>
-        </div>
-
-        <!-- Filter Dropdowns -->
-        <div class="filter-controls">
-          <mat-form-field appearance="outline" class="time-filter">
-            <mat-label>This Month</mat-label>
-            <mat-select>
-              <mat-option value="today">Today</mat-option>
-              <mat-option value="week">This Week</mat-option>
-              <mat-option value="month">This Month</mat-option>
-              <mat-option value="year">This Year</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="type-filter">
-            <mat-label>Documents</mat-label>
-            <mat-select>
-              <mat-option value="all">All Documents</mat-option>
-              <mat-option value="pdf">PDF Files</mat-option>
-              <mat-option value="word">Word Documents</mat-option>
-              <mat-option value="excel">Excel Files</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <button mat-raised-button color="primary" class="add-btn">
-            <mat-icon>add</mat-icon>
-          </button>
         </div>
 
         <!-- Documents List Header -->

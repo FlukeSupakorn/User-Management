@@ -400,39 +400,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .action-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 32px;
-  height: 32px;
   padding: 0 !important;
-  color: #5F6368;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  min-width: 36px !important;
+  line-height: 36px !important;
 }
 
 .action-btn mat-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin: 0 !important;
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+}
+
+.edit-btn {
+  background: #f1f3f4 !important;
+  color: #5F6368 !important;
 }
 
 .edit-btn:hover {
-  background: #F8F9FA;
-  color: #1967D2;
+  background: #e0e0e0 !important;
+  color: #1976D2 !important;
+}
+
+.delete-btn {
+  background: #fdf1f0 !important;
+  color: #5F6368 !important;
 }
 
 .delete-btn:hover {
-  background: #FEF7F0;
-  color: #EA4335;
+  background: #fbeaea !important;
+  color: #e53935 !important;
 }
 
 .pagination-container {
