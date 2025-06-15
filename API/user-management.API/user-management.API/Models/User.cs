@@ -6,7 +6,8 @@ namespace user_management.API.Models
 {
     public class User
     {
-        public int UserId { get; set; }
+        [Key]
+        public string UserId { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]

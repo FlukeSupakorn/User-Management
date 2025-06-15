@@ -11,7 +11,7 @@ namespace user_management.API.Models
         [StringLength(100)]
         public string ModuleName { get; set; } = string.Empty;
 
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         public bool CanRead { get; set; }
 

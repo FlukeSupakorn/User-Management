@@ -20,6 +20,14 @@ namespace user_management.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configure User entity
+            modelBuilder.Entity<User>()
+                .HasKey(u => u.UserId);
+            
+            modelBuilder.Entity<User>()
+                .Property(u => u.UserId)
+                .ValueGeneratedNever(); // UserId will not be auto-generated
+
             // Configure relationship between Users and Roles (one-to-many)
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Role)

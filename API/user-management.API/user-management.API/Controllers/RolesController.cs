@@ -28,7 +28,7 @@ namespace user_management.API.Controllers
                     {
                         RoleId = r.RoleId,
                         RoleName = r.RoleName,
-                        Description = r.Description,
+                        Description = r.Description ?? string.Empty,
                         CreatedDate = r.CreatedDate,
                     })
                     .ToListAsync();
@@ -53,7 +53,7 @@ namespace user_management.API.Controllers
                     {
                         RoleId = r.RoleId,
                         RoleName = r.RoleName,
-                        Description = r.Description,
+                        Description = r.Description ?? string.Empty,
                         CreatedDate = r.CreatedDate,
                     })
                     .FirstOrDefaultAsync();
@@ -182,7 +182,7 @@ namespace user_management.API.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(ApiResponse<object>.SuccessResult(null, "Role deleted successfully"));
+                return Ok(ApiResponse<object>.SuccessResult(new object(), "Role deleted successfully"));
             }
             catch (Exception ex)
             {

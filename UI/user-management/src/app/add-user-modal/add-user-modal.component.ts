@@ -8,7 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { UserService, UserFormData, UserPermission, Role, ApiResponse } from '../services/user.service';
+import { UserService, UserFormData, UserPermission, Role, ApiResponse, ModulePermissionDto } from '../services/user.service';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import ShortUniqueId from 'short-unique-id';
 
@@ -73,10 +73,10 @@ export class AddUserModalComponent implements OnInit {
   }
 
   generateUserId() {
-    // Generate a numeric user ID using short-unique-id library
+    // Generate a unique alphanumeric user ID to avoid collisions
     const uid = new ShortUniqueId({ 
-      length: 8,
-      dictionary: '0123456789'.split('') // Only numbers
+      length: 10,
+      dictionary: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
     });
     
     const generatedId = uid.rnd();
@@ -165,19 +165,40 @@ export class AddUserModalComponent implements OnInit {
 
       this.userForm.patchValue(formValue);
 
-      
-      if ((this.editUserData as any).permissions) {
-        const userPermissions = (this.editUserData as any).permissions;
-        userPermissions.forEach((perm: any) => {
-          const modulePermission = this.modulePermissions.find(mp => mp.moduleName === perm.moduleName);
-          if (modulePermission) {
-            modulePermission.read = perm.isReadable;
-            modulePermission.write = perm.isWritable;
-            modulePermission.delete = perm.isDeletable;
-          }
-        });
+      // Load permissions from API instead of using passed data
+      if (this.editUserData.userId) {
+        this.loadUserPermissions(this.editUserData.userId);
       }
     }
+  }
+
+  loadUserPermissions(userId: string) {
+    this.userService.getUserModulePermissions(userId).subscribe({
+      next: (response: ApiResponse<ModulePermissionDto[]>) => {
+        if (response.success) {
+          // Reset all permissions to false first
+          this.modulePermissions.forEach(mp => {
+            mp.read = false;
+            mp.write = false;
+            mp.delete = false;
+          });
+
+          // Set permissions from database
+          response.data.forEach((perm: ModulePermissionDto) => {
+            const modulePermission = this.modulePermissions.find(mp => mp.moduleName === perm.moduleName);
+            if (modulePermission) {
+              modulePermission.read = perm.canRead;
+              modulePermission.write = perm.canWrite;
+              modulePermission.delete = perm.canDelete;
+            }
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading user permissions:', error);
+        // Keep default permissions (all false) if API call fails
+      }
+    });
   }
 
   updatePermission(moduleName: string, permissionType: 'read' | 'write' | 'delete', checked: boolean) {
@@ -187,18 +208,21 @@ export class AddUserModalComponent implements OnInit {
     }
   }
 
+
+
   closeModal() {
     this.closeModalEvent.emit();
   }  saveUser() {
     if (this.userForm.valid || this.isEditMode) {
       const formData = this.userForm.value;
       const userData: UserFormData = {
+        userId: formData.userId.toString(),
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         username: formData.username,
-        roleId: parseInt(formData.roleId),
+        roleId: formData.roleId.toString(), // Send as string to match API expectation
         permissions: this.modulePermissions.map(perm => ({
           moduleName: perm.moduleName,
           isReadable: perm.read,
@@ -216,8 +240,28 @@ export class AddUserModalComponent implements OnInit {
       console.log('Module permissions:', this.modulePermissions);
 
       if (this.isEditMode) {
-        
-        this.saveUserEvent.emit(userData);
+        // Call update API directly like add mode, sending permissions to backend
+        if (this.editUserData && this.editUserData.userId) {
+          this.userService.updateUser(this.editUserData.userId, userData).subscribe({
+            next: (response: ApiResponse<UserFormData>) => {
+              if (response.success) {
+                // Emit to parent to trigger refresh
+                this.saveUserEvent.emit(userData);
+                this.closeModal();
+              } else {
+                alert('Error updating user: ' + response.message);
+              }
+            },
+            error: (error: any) => {
+              console.error('Error updating user:', error);
+              console.error('Error details:', error.error);
+              if (error.error && error.error.errors) {
+                console.error('Validation errors:', error.error.errors);
+              }
+              alert('Error updating user. Please check the console for details.');
+            }
+          });
+        }
       } else {
         
         this.userService.createUser(userData).subscribe({
@@ -232,6 +276,10 @@ export class AddUserModalComponent implements OnInit {
           },
           error: (error: any) => {
             console.error('Error saving user:', error);
+            console.error('Error details:', error.error);
+            if (error.error && error.error.errors) {
+              console.error('Validation errors:', error.error.errors);
+            }
             alert('Error saving user. Please check the console for details.');
           }
         });
@@ -259,7 +307,7 @@ export class AddUserModalComponent implements OnInit {
 
   deleteUser() {
     if (this.editUserData && this.editUserData.userId) {
-      this.userService.deleteUser(parseInt(this.editUserData.userId)).subscribe({
+      this.userService.deleteUser(this.editUserData.userId).subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.success) {
             alert('User deleted successfully!');

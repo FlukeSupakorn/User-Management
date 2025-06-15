@@ -3,13 +3,13 @@ using System.Collections.Generic;
 namespace user_management.API.DTOs
 {    public class UserDto
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
-        public int RoleId { get; set; }
+        public string RoleId { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty; // Add role name
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
@@ -18,13 +18,14 @@ namespace user_management.API.DTOs
     
     public class CreateUserDto
     {
+        public string UserId { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public int RoleId { get; set; }
+        public string RoleId { get; set; } = string.Empty;
         public List<UserPermissionDto> Permissions { get; set; } = new List<UserPermissionDto>();
     }
     
@@ -35,7 +36,7 @@ namespace user_management.API.DTOs
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
-        public int RoleId { get; set; }
+        public string RoleId { get; set; } = string.Empty;
         public List<UserPermissionDto> Permissions { get; set; } = new List<UserPermissionDto>();
     }
 }

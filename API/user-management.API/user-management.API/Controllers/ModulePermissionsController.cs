@@ -72,7 +72,7 @@ namespace user_management.API.Controllers
         }
 
         [HttpGet("user/{userId}")]
-        public async Task<ActionResult<ApiResponse<List<ModulePermissionDto>>>> GetUserModulePermissions(int userId)
+        public async Task<ActionResult<ApiResponse<List<ModulePermissionDto>>>> GetUserModulePermissions(string userId)
         {
             try
             {
@@ -196,7 +196,7 @@ namespace user_management.API.Controllers
                 _context.ModulePermissions.Remove(permission);
                 await _context.SaveChangesAsync();
 
-                return Ok(ApiResponse<object>.SuccessResult(null, "Module permission deleted successfully"));
+                return Ok(ApiResponse<object>.SuccessResult(new object(), "Module permission deleted successfully"));
             }
             catch (Exception ex)
             {
@@ -205,7 +205,7 @@ namespace user_management.API.Controllers
         }
 
         [HttpDelete("user/{userId}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteUserModulePermissions(int userId)
+        public async Task<ActionResult<ApiResponse<object>>> DeleteUserModulePermissions(string userId)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace user_management.API.Controllers
                 _context.ModulePermissions.RemoveRange(permissions);
                 await _context.SaveChangesAsync();
 
-                return Ok(ApiResponse<object>.SuccessResult(null, $"All module permissions for user {userId} deleted successfully"));
+                return Ok(ApiResponse<object>.SuccessResult(new object(), $"All module permissions for user {userId} deleted successfully"));
             }
             catch (Exception ex)
             {

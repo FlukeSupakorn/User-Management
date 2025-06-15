@@ -145,3 +145,32 @@ body {
 .mat-mdc-menu-item:hover {
   background-color: #F8F9FA !important;
 }
+
+/* Global Material Icon Alignment Fix */
+mat-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* Fix for Material Icon Buttons */
+.mat-mdc-icon-button mat-icon,
+.mat-mdc-button mat-icon,
+button mat-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+/* Ensure buttons center their content */
+.mat-mdc-icon-button,
+.mat-mdc-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

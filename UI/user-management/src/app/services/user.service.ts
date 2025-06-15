@@ -10,13 +10,21 @@ export interface UserPermission {
   isDeletable: boolean;
 }
 
+export interface ModulePermissionDto {
+  permissionId: number;
+  moduleName: string;
+  canRead: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+}
+
 export interface UserFormData {
   userId?: string;
   firstName?: string;
   lastName?: string;
   email: string;
   phone?: string;
-  roleId?: number;
+  roleId?: number | string; // Allow both number and string
   username?: string;
   password?: string;
   permissions?: UserPermission[];
@@ -64,11 +72,15 @@ export class UserService {
     return this.http.post<ApiResponse<UserFormData>>(`${this.apiUrl}/Users`, userData, this.getHttpOptions());
   }
 
-  updateUser(userId: number, userData: UserFormData): Observable<ApiResponse<UserFormData>> {
+  updateUser(userId: string, userData: UserFormData): Observable<ApiResponse<UserFormData>> {
     return this.http.put<ApiResponse<UserFormData>>(`${this.apiUrl}/Users/${userId}`, userData, this.getHttpOptions());
   }
 
-  deleteUser(userId: number): Observable<ApiResponse<any>> {
+  deleteUser(userId: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/Users/${userId}`, this.getHttpOptions());
+  }
+
+  getUserModulePermissions(userId: string): Observable<ApiResponse<ModulePermissionDto[]>> {
+    return this.http.get<ApiResponse<ModulePermissionDto[]>>(`${this.apiUrl}/ModulePermissions/user/${userId}`, this.getHttpOptions());
   }
 }

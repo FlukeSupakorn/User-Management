@@ -23,7 +23,7 @@ export interface UserPermission {
 }
 
 export interface UserData {
-  userId?: number;
+  userId?: string;
   name: string;
   email: string;
   createDate: string;
@@ -109,7 +109,7 @@ export class UserTableComponent implements OnInit, AfterViewInit {
         console.log(`User count changed from ${previousUserCount} to ${this.allUsers.length}`);
         
         // Find the updated user and log it
-        const updatedUser = this.allUsers.find(u => u.userId === parseInt(this.editingUser?.userId || '0'));
+        const updatedUser = this.allUsers.find(u => u.userId === this.editingUser?.userId);
         if (updatedUser) {
           console.log('Updated user in fetched data:', updatedUser);
         }
@@ -243,55 +243,13 @@ export class UserTableComponent implements OnInit, AfterViewInit {
     return roleMap[roleId] || 'Employee';
   }  onSaveUser(userData: any) {
     console.log('onSaveUser called with userData:', userData);
-    console.log('showEditUserModal:', this.showEditUserModal);
-    console.log('editingUser:', this.editingUser);
     
-    if (this.showEditUserModal && this.editingUser) {
-      // Edit mode - call API to update user
-      if (!this.editingUser.userId) {
-        console.error('User ID is missing for update');
-        return;
-      }      const updateData: UserFormData = {
-        userId: this.editingUser.userId,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        phone: userData.phone,
-        roleId: userData.roleId,
-        username: userData.username
-        // Remove password to avoid issues
-      };      // Only include password if it's provided
-      if (userData.password && userData.password.trim() !== '') {
-        updateData.password = userData.password;
-      }
-
-      console.log('Calling updateUser API with data:', updateData);
-      console.log('User ID for update:', parseInt(this.editingUser.userId));
-
-      this.userService.updateUser(parseInt(this.editingUser.userId), updateData).subscribe({
-        next: (response) => {
-          console.log('Update API response:', response);
-          if (response.success) {
-            console.log('User updated successfully');
-            // Refetch all users from API to ensure consistency with a small delay
-            setTimeout(() => {
-              this.fetchUsersFromApi();
-            }, 100);
-          } else {
-            console.error('Error updating user:', response.message);
-          }
-          this.closeEditUserModal();
-        },
-        error: (error) => {
-          console.error('Error updating user:', error);
-          // Still close the modal but show the error
-          this.closeEditUserModal();
-        }
-      });
+    // The modal handles the API call directly, just refresh the table and close modals
+    this.fetchUsersFromApi();
+    
+    if (this.showEditUserModal) {
+      this.closeEditUserModal();
     } else {
-      // Add mode - the modal already handled the API call, just refresh the table
-      console.log('User added successfully, refreshing table');
-      this.fetchUsersFromApi();
       this.closeAddUserModal();
     }
   }
@@ -319,7 +277,7 @@ export class UserTableComponent implements OnInit, AfterViewInit {
     if (!this.deletingUser?.userId) {
       return;
     }
-    this.userService.deleteUser(this.deletingUser.userId).subscribe({
+    this.userService.deleteUser(this.deletingUser.userId.toString()).subscribe({
       next: () => {
         this.fetchUsersFromApi();
         this.cancelDelete();

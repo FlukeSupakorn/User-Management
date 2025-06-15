@@ -36,7 +36,7 @@ namespace user_management.API.Controllers
                         Email = u.Email,
                         Phone = u.Phone ?? string.Empty,
                         Username = u.Username,
-                        RoleId = u.RoleId,
+                        RoleId = u.RoleId.ToString(),
                         Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
@@ -69,7 +69,7 @@ namespace user_management.API.Controllers
 
         
         [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(int id)
+        public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(string id)
         {
             try
             {
@@ -85,7 +85,7 @@ namespace user_management.API.Controllers
                         Email = u.Email,
                         Phone = u.Phone ?? string.Empty,
                         Username = u.Username,
-                        RoleId = u.RoleId,
+                        RoleId = u.RoleId.ToString(),
                         Role = u.Role != null ? u.Role.RoleName : "Employee", 
                         CreatedDate = u.CreatedDate,
                         UpdatedDate = u.UpdatedDate,
@@ -120,14 +120,22 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
     try
     {
         // Validate required fields
-        if (string.IsNullOrWhiteSpace(createUserDto.FirstName) ||
+        if (string.IsNullOrWhiteSpace(createUserDto.UserId) ||
+            string.IsNullOrWhiteSpace(createUserDto.FirstName) ||
             string.IsNullOrWhiteSpace(createUserDto.LastName) ||
             string.IsNullOrWhiteSpace(createUserDto.Email) ||
             string.IsNullOrWhiteSpace(createUserDto.Username) ||
             string.IsNullOrWhiteSpace(createUserDto.Password) ||
-            createUserDto.RoleId <= 0)
+            string.IsNullOrWhiteSpace(createUserDto.RoleId))
         {
             return BadRequest(ApiResponse<UserDto>.FailureResult("All required fields must be provided"));
+        }
+
+        // Check if UserId already exists
+        var existingUserWithId = await _context.Users.AnyAsync(u => u.UserId == createUserDto.UserId);
+        if (existingUserWithId)
+        {
+            return Conflict(ApiResponse<UserDto>.FailureResult("User ID already exists"));
         }
 
         // Normalize username and email for comparison
@@ -135,8 +143,14 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
         var normalizedEmail = createUserDto.Email.Trim().ToLower();
 
 
+        // Parse and validate RoleId
+        if (!int.TryParse(createUserDto.RoleId, out int roleId) || roleId <= 0)
+        {
+            return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role ID"));
+        }
+
         // Fetch the role
-        var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == createUserDto.RoleId);
+        var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == roleId);
         if (role == null)
         {
             return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
@@ -148,13 +162,14 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
         // Create user
         var user = new User
         {
+            UserId = createUserDto.UserId,
             FirstName = createUserDto.FirstName.Trim(),
             LastName = createUserDto.LastName.Trim(),
             Email = createUserDto.Email.Trim(),
             Phone = createUserDto.Phone?.Trim(),
             Username = createUserDto.Username.Trim(),
             PasswordHash = hashedPassword,
-            RoleId = createUserDto.RoleId,
+            RoleId = roleId,
             Role = role,
             CreatedDate = DateTime.UtcNow,
         };
@@ -189,13 +204,13 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
 
         var userDto = new UserDto
         {
-            UserId = createdUser.UserId,
+            UserId = createdUser!.UserId,
             FirstName = createdUser.FirstName,
             LastName = createdUser.LastName,
             Email = createdUser.Email,
-            Phone = createdUser.Phone,
+            Phone = createdUser.Phone ?? string.Empty,
             Username = createdUser.Username,
-            RoleId = createdUser.RoleId,
+            RoleId = createdUser.RoleId.ToString(),
             Role = createdUser.Role != null ? createdUser.Role.RoleName : "Employee",
             CreatedDate = createdUser.CreatedDate,
             UpdatedDate = createdUser.UpdatedDate,
@@ -220,7 +235,7 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
 
         
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<UserDto>>> UpdateUser(int id, UpdateUserDto updateUserDto)
+        public async Task<ActionResult<ApiResponse<UserDto>>> UpdateUser(string id, UpdateUserDto updateUserDto)
         {
             try
             {
@@ -238,14 +253,19 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
                 }
 
                 
-                if (updateUserDto.RoleId > 0)
+                if (!string.IsNullOrWhiteSpace(updateUserDto.RoleId))
                 {
-                    var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == updateUserDto.RoleId);
+                    if (!int.TryParse(updateUserDto.RoleId, out int roleId) || roleId <= 0)
+                    {
+                        return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role ID"));
+                    }
+                    
+                    var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == roleId);
                     if (role == null)
                     {
                         return BadRequest(ApiResponse<UserDto>.FailureResult("Invalid role selected"));
                     }
-                    user.RoleId = updateUserDto.RoleId;
+                    user.RoleId = roleId;
                     user.Role = role;
                 }
 
@@ -293,13 +313,13 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
 
                 var userDto = new UserDto
                 {
-                    UserId = updatedUser.UserId,
+                    UserId = updatedUser!.UserId,
                     FirstName = updatedUser.FirstName,
                     LastName = updatedUser.LastName,
                     Email = updatedUser.Email,
-                    Phone = updatedUser.Phone,
+                    Phone = updatedUser.Phone ?? string.Empty,
                     Username = updatedUser.Username,
-                    RoleId = updatedUser.RoleId,
+                    RoleId = updatedUser.RoleId.ToString(),
                     Role = updatedUser.Role != null ? updatedUser.Role.RoleName : "Employee", 
                     CreatedDate = updatedUser.CreatedDate,
                     UpdatedDate = updatedUser.UpdatedDate,
@@ -323,7 +343,7 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
 
         
         [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponse<object>>> DeleteUser(int id)
+    public async Task<ActionResult<ApiResponse<object>>> DeleteUser(string id)
     {
         // 1) find the user
         var user = await _context.Users.FindAsync(id);
@@ -336,7 +356,7 @@ public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto c
 
         // 3) confirm how many rows were affected (should be 1)
         if (rows > 0)
-            return Ok(ApiResponse<object>.SuccessResult(null, "User deleted successfully"));
+            return Ok(ApiResponse<object>.SuccessResult(new object(), "User deleted successfully"));
         else
             return StatusCode(500, ApiResponse<object>.FailureResult("Delete did not persist"));
     }
